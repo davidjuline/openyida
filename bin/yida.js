@@ -279,6 +279,7 @@ function getFirstPositionalArg(cliArgs, startIndex = 0) {
     '--login-url',
     '--profile',
     '--user-id',
+    '--env-hint',
   ]);
   for (let index = startIndex; index < cliArgs.length; index++) {
     const arg = cliArgs[index];
@@ -386,6 +387,7 @@ function applyLoginEnvironmentFlags(cliArgs, options = {}) {
     '--client-id',
     '--profile',
     '--user-id',
+    '--env-hint',
   ]);
   const targetUrlFlags = new Set([
     '--endpoint',
