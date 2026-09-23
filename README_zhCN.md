@@ -103,7 +103,7 @@ openyida auth profile switch <auth_profile>
 如果用户给出明确的宜搭入口 URL，需要把 URL 传给登录命令：
 
 ```bash
-openyida login https://yida-group.alibaba-inc.com/
+openyida login https://<your-yida-entry-url>/
 openyida login --alibaba
 ```
 

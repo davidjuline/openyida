@@ -9,7 +9,13 @@ function oauthError(statusCode, payload) {
 
 function loadDeviceModule(requestJson) {
   jest.resetModules();
-  jest.doMock('../lib/auth/token-auth', () => ({ requestJson }));
+  jest.doMock('../lib/auth/token-auth', () => ({
+    requestJson,
+    getTokenPayload: (response) => {
+      if (!response || typeof response !== 'object') { return response || {}; }
+      return response.data || response.content || response;
+    },
+  }));
   return require('../lib/auth/oauth-device');
 }
 
@@ -60,9 +66,11 @@ describe('OAuth device authorization flow', () => {
       });
     expect(states[0]).toMatchObject({
       state: 'awaiting_verification',
-      verification_uri: 'https://example.test/openapi/cli/v1/auth/device/verify',
-      verification_uri_complete:
+      verificationUri: 'https://example.test/openapi/cli/v1/auth/device/verify',
+      verificationUriComplete:
         'https://example.test/openapi/cli/v1/auth/device/verify?userCode=ABCD-EFGH',
+      userCode: 'ABCD-EFGH',
+      expiresIn: 60,
     });
     expect(result).toMatchObject({ accessToken: 'access-token' });
   });

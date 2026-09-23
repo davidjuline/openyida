@@ -84,7 +84,7 @@ openyida login --device --env-hint pre
 When the user names a target Yida entry URL, pass it to the login command so OpenYida can select the matching environment and auth profile. For example:
 
 ```bash
-openyida login https://yida-group.alibaba-inc.com/
+openyida login https://<your-yida-entry-url>/
 openyida login --alibaba
 ```
 

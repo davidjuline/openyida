@@ -193,6 +193,7 @@ function printLoginResult(result) {
 
   if (!result) {
     console.log(JSON.stringify({
+      type: 'login_result',
       ok: false,
       status: 'login_failed',
       can_auto_use: false,
@@ -205,6 +206,7 @@ function printLoginResult(result) {
     ? !!result.ok
     : (result.can_auto_use !== false && !!result.access_token);
   const summary = {
+    type: 'login_result',
     ok: tokenUsable,
     status: result.status || (tokenUsable ? 'ok' : 'token_not_issued'),
     auth_mode: 'token',
