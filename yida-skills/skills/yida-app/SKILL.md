@@ -1,21 +1,29 @@
 ---
 name: yida-app
-description: 创建完整宜搭应用，或补齐已有应用时使用。先确认核心功能和实际用法；Fast 直接搭建，Plan 先确认方案。由 yida-prd 和 yida-design 同时准备业务与基础视觉，校验后创建或复用资源；表单/流程先于自定义页面。页面 UI 按已确认设计实现，代码示例按需参考；发布后优先按 PRD 导航顺序排序，检查后交付入口。
+description: 创建完整宜搭应用，或补齐已有应用时使用。先确认核心功能和实际用法；Fast 直接搭建，Plan 先确认方案。由 yida-prd 和 yida-design 同时准备业务与基础视觉，校验后创建或复用资源；表单/流程先于自定义页面。页面 UI 按已确认设计实现，代码示例按需参考；前后台都规划菜单顺序与默认页面，发布后分别验收实际入口。
 ---
 
 # yida-app
 
 完整应用编排技能。它负责把一次“创建/搭建/补齐应用”的需求拆成资源解析、产品设计、资源落地、页面发布和结果输出。全局 CLI、ID、存储、发布和输出规则以主入口 `SKILL.md` 为准；按步骤执行该步骤所需 `use_skill(...)`。
 
-完整应用交付默认保留开发者管理后台（CLI `adminUrl`），与业务后台区分：有前后台时共三个地址；仅前台或统一工作区时共两个地址。登录态来源不影响 `/admin` 的交付；单页任务保持单页范围，用户明确排除的入口优先。详见 Step 9。
+完整应用交付默认保留开发者管理后台（CLI `adminUrl`），与业务后台区分：有前后台时共三个地址；仅前台、仅业务后台或不分前后台时共两个地址。登录态来源不影响 `/admin` 的交付；单页任务保持单页范围，用户明确排除的入口优先。详见 Step 9。
 
 ## 模式入口（先按这里路由）
 
 首次需求澄清优先进入 Step 2 的 2.0；首问前不执行 Step 1 的环境和资源预检，已有明确资源引用作为需求上下文保留。澄清完成后再按需核验资源、补齐规划输入。
 
-`intake.designMode` 沿用用户最后一次明确选择，其他问题的回答只更新对应字段。Plan 收到与当前 revision 匹配的 `confirm_build` 后进入资源实施；选择 `continue_editing` 时修改当前计划，生成新 revision 后再确认。素材进度同步保留已有确认。
+已有任务先按 [续做与恢复](#续做与恢复) 定位当前阶段。
 
-Plan 模式只读取 `workflow/step-1-resource-context.md`、`workflow/step-2-design.md` 和精确路径 `workflow/plan/workflow.md`；后者已经包含完整 Plan 入口。禁止用 Glob 查找 Plan 文件，也不要额外读取 `workflow/plan/step-1-understand.md` 或 `workflow/plan/step-2-confirm.md`。Plan 确认恢复后，若 `explicitScope.allowInferredResources=false`，直接读取 `workflow/step-4-forms-processes.md` 实施范围内资源，不再重读 Step 1、调用 list-forms 或做应用设置预检。
+需求确认不能替代当前 Plan revision 的批准或工具权限确认。`intake.designMode` 沿用用户最后一次明确选择，其他问题的回答只更新对应字段。Plan 收到与当前 revision 匹配的 `confirm_build` 后进入资源实施；选择 `continue_editing` 时修改当前计划，生成新 revision 后再确认。素材进度更新不改变已有的需求确认和模式选择。
+
+Plan 规划阶段的工作流入口只读取 `workflow/step-1-resource-context.md`、`workflow/step-2-design.md` 和精确路径 `workflow/plan/workflow.md`；后者已经包含完整 Plan 入口。禁止用 Glob 查找 Plan 文件，也不要额外读取 `workflow/plan/step-1-understand.md` 或 `workflow/plan/step-2-confirm.md`。此读取范围不限制确认后的实施、验收和交付，各阶段按需读取对应 workflow。Plan 确认恢复后，若 `explicitScope.allowInferredResources=false`，直接读取 `workflow/step-4-forms-processes.md` 实施范围内资源，不再重读 Step 1、调用 list-forms 或做应用设置预检。
+
+## 续做与恢复
+
+先判断本轮是否已有有效需求确认：历史回答或同任务 `intake.confirmed=true` 覆盖当前范围且未被撤回时，复用答案、PRD、设计和资源回执，从未完成阶段继续。刷新、恢复、压缩或用户说“继续”不触发重新首问；仅应用已存在也不代表需求已确认。状态不明时先只读核对当前任务材料；范围变更、材料缺失或冲突按 [需求分析的适用阶段与续做](../yida-requirement-analysis/workflow/prepare-brief.md#适用阶段与续做) 处理。
+
+已发布但尚未完成本轮导航、验收或交付时，按缺项进入 [Step 8](workflow/step-8-publish-navigation.md) 或 [Step 9](workflow/step-9-output-finish.md)，不返回需求首问。发布成功回执不能替代实际验收。
 
 ## 执行步骤（进行时展示给用户）
 
@@ -86,10 +94,10 @@ Plan 模式只读取 `workflow/step-1-resource-context.md`、`workflow/step-2-de
 
 1. **资源判断以 Step 1 为准**：已有 app/page/form/process 默认复用；只有用户明确从零创建，或目标缺失且本轮允许创建时，才创建缺失资源。
 2. **显式目标优先**：本轮用户给出的 `appType`、`formUuid`、URL、页面名或流程标识，优先级高于绑定上下文和历史缓存；同级冲突或无法唯一识别时才问用户。
-3. **产品与视觉分工**：`yida-requirement-analysis` 先统一整理用户需求；业务目标、资源蓝图、页面结构、导航顺序和验收标准由 `yida-prd` 写入 `prd.md`；主题 token、布局、材质、圆角、密度、组件和状态规则由 `yida-design` 写入 `design.md`。两份文件校验通过前不得创建资源。
+3. **产品与视觉分工**：`yida-requirement-analysis` 先统一整理用户需求；业务目标、资源蓝图、页面结构、导航顺序和验收标准由 `yida-prd` 写入 `prd.md`；`yida-design` 将导航、应用框架、表单、详情和自定义页面的主题 token、布局、材质、形状、密度与状态规则写入 `design.md`。两份文件校验通过前不得创建资源。
 4. **阶段技能按需加载**：进入应用壳、表单、流程、页面、发布、数据写入等阶段时，才执行对应 `use_skill(...)`。
 5. **真实 ID 和真实数据**：不编造 `appType`、`formUuid`、`fieldId`、`processCode`、`reportId`。无显式窄范围的完整应用默认给核心普通表单写入 1-3 条业务化 seed records 并 query 抽查；`explicitScope.allowInferredResources=false` 时不得增加未点名的 seed records 或页面。
-6. **自定义页面开发技能固定**：完整应用页面源码按 Step 7 执行；管理端仅需原生视图时不创建 display 首页。前后台按 [访问态入口契约](references/entry-navigation.md) 分别规划菜单、默认落点和权限。
+6. **自定义页面开发技能固定**：完整应用页面源码按 Step 7 执行；管理端仅需原生视图时不创建 display 首页。前后台按 [访问态入口契约](references/entry-navigation.md) 分别规划菜单及分组顺序、默认页面、首屏任务和权限；平台导航与自定义导航都要落实排序并验收。
 7. **删除必须确认**：用户要求删除应用时，先展示应用名称、应用 ID 和影响范围，等待明确“确认删除”后才能执行。
 8. **页面实现选择**：前台默认一个 coding 页承载已选任务的多个视图；后台按操作效率选择原生或 coding。平台数据管理满足任务时可复用，需要不同交互时由 AI 为已选功能规划自定义视图。
 9. **交付物收口**：Step 2 的三个文件和 Step 9 的 build manifest 都是内部文件，不是用户交付物。表单、流程、报表和页面只在业务总结中概述，不逐项生成用户可见附件；宿主支持交付工具时，final 只交付一次“应用访问入口”组。
@@ -100,7 +108,7 @@ Plan 模式只读取 `workflow/step-1-resource-context.md`、`workflow/step-2-de
 - 需要收集或存储数据：先创建或复用核心普通表单，再生成页面；纯展示或静态内容可跳过表单创建。
 - 需要审批、申请、审核、工单流转：先创建或复用流程表单，再生成页面。
 - 需要标准统计：优先创建原生报表；明确高级图表或大屏时，再选择 `yida-rechart` / `yida-chart`。
-- 主页面语义为看板、工作台、驾驶舱或 Dashboard：必须加载 `yida-dashboard`；页面读取任何表单业务数据时必须继续加载 `yida-canvas-data-binding`，不能只加载 `yida-canvas-custom-page`。
+- 按页面主任务选技能：经营分析、指标判断或投屏监控页面加载 `yida-dashboard`；待办、操作队列、业务列表和门户式工作台由 `yida-canvas-custom-page` 实现，不能仅凭“工作台”或“看板”名称加载经营看板技能。页面读取任何表单业务数据时继续加载 `yida-canvas-data-binding`。
 - PRD 明确包含报表或集成自动化时，它们属于 Step 4 主流程资源，不得推迟到 final 后置建议；自动化动作必须按通知、数据新增/更新、审批完成、定时或手动触发分别建模，不得统一退化成新增通知。
 
 ## 页面数据契约
@@ -108,7 +116,7 @@ Plan 模式只读取 `workflow/step-1-resource-context.md`、`workflow/step-2-de
 - 默认页面源码不得使用 `this.dataSourceMap.*`，除非本轮已经创建并绑定对应设计器数据源。
 - 真实表单数据默认通过页面数据桥或 `window.__OPENYIDA_YIDA_API__.searchFormDatas(params)` 读取；流程发起、流程列表、表单保存/更新等能力也通过发布层注入的同一个 yida API 桥调用；不要用前端 seedRows 冒充真实表单数据。
 - 页面根级运行态工具通过 `window.__OPENYIDA_UTILS__` 读取，`toast/dialog/openPage/router.push/isMobile` 等工具不能在 `YidaComp` 内直接写 `this.utils.*`。
-- 计划选择打开原生表单的新建/提交/详情入口统一使用 `FormOpenContainer`，详情页必须从真实行数据解析 `formInstId`。
+- 自定义页内普通表单新建/提交/详情必须接入 CLI 提供的 `FormOpenContainer` 抽屉模板，前台全码开发也不豁免；调用 `openForm` 并挂载 `formOpenContainer`，详情页从真实行数据解析 `formInstId`。不另写普通填写表单、直接跳转或简化弹层。
 - 用户明确要求的自定义列表、看板和详情页优先读取真实表单数据；`page-spec.json` 写 `dataBinding.mode=form`、真实 `appType/formUuid/fieldId` 和字段映射。表单数据管理页不另生成页面源码。
 - 完整应用默认先写入 1-3 条业务化 seed records 并 query 抽查；没写入成功时，页面展示空态、表单入口、刷新或登记按钮，并在 final 说明原因。
 - 若页面确实依赖 `this.dataSourceMap.*`，必须执行 `use_skill("yida-data-source-connectors")` 创建/绑定数据源，并在发布后确认页面 Schema 中存在对应数据源；发布输出出现 `No custom page data sources to preserve` 时，本次发布不能视为完成。
@@ -131,3 +139,6 @@ Plan 模式只读取 `workflow/step-1-resource-context.md`、`workflow/step-2-de
 | [Step 8：发布页面并排序导航](workflow/step-8-publish-navigation.md) | publish、导航排序、发布完成证据 | 必读 |
 | [Step 9：输出与收尾](workflow/step-9-output-finish.md) | final 口径、URL 规则、可选后置、错误处理 | 必读 |
 | [常见问题解决思路](references/common-issues.md) | 资源冲突、字段 ID、seed records、页面数据、发布失败、输出口径等高频问题 | 遇到异常或执行结果不符合预期时 |
+
+
+应用整体设计可使用[应用风格模板或自由创意](../yida-design/references/application-style-library.md)。导航、自定义页面、表单与详情继承同一设计语言；自由创意从业务推演，不强制选模板。模板中的表单布局 JSON 提供结构起点，使用时填入真实字段并核对间距和响应式。

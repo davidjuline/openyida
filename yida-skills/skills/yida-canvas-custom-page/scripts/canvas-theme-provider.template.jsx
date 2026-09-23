@@ -105,7 +105,7 @@ function CanvasThemeProvider({ children, preview = false, getPopupContainer }) {
       try {
         const token = resolveCanvasTheme(root);
         const controls = resolveCanvasControls(token);
-        const components = { ...resolveCanvasControlComponents(token, controls), Drawer: resolveCanvasTheme(root, { colorBgElevated: ['--pod-shell-theme-bg-color', '--color-white'] }) };
+        const components = { ...resolveCanvasControlComponents(token, controls), Drawer: resolveCanvasTheme(root, { colorBgElevated: ['--pod-shell-theme-bg-color', '--color-white'], colorText: ['--pod-page-header-text-color', '--color-text1-4'], colorTextHeading: ['--pod-page-header-text-color', '--color-text1-4'] }) };
         next = { token, components, controls, status: token.colorPrimary ? (preview ? 'preview' : 'ready') : 'missing' };
       } catch (_error) {
         next = { token: {}, components: {}, controls: null, status: 'error' };
@@ -144,6 +144,13 @@ function CanvasThemeProvider({ children, preview = false, getPopupContainer }) {
       background: 'var(--pod-page-bg-color, var(--color-white, #fff))',
       color: 'var(--color-text1-4, #1f2329)',
     }}>
+      {/* Keep late CSS resets from animating the loading mask's border. */}
+      <style>{`
+        [data-canvas-theme-status] .ant-spin-nested-loading .ant-spin-container::after {
+          border: 0 solid transparent;
+          transition: opacity 0.3s;
+        }
+      `}</style>
       <CanvasThemeContext.Provider value={context}>
         <ConfigProvider theme={{ token: theme.token, components: theme.components }} getPopupContainer={getPopupContainer}>{children}</ConfigProvider>
       </CanvasThemeContext.Provider>

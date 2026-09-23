@@ -10,18 +10,31 @@ const path = require('path');
 // Budgets are ratchets that track legitimate content growth (12 locale packs,
 // samples, skills). Raise them intentionally when new content is justified; the
 // per-file cap stays fixed to catch accidental large-blob embeds.
-// State recovery adds a sample and two skill references (3 published files).
-// Node 26/npm 11 measures 1,944,066 packed / 6,738,306 unpacked bytes in 520 files.
-// Retain ~21 KiB npm 10 compression overhead; round budgets to 16 KiB boundaries.
-const MAX_TARBALL_BYTES = 1920 * 1024;
-const MAX_UNPACKED_BYTES = 6592 * 1024;
-const MAX_ENTRY_COUNT = 520;
+// Application styles add 18 paired presets plus the independent creative scaffold
+// (57 design/CSS/layout assets), their catalog, recipe and runtime consumer. Complete
+// content/navigation tone and detail-field tokens are retained in every standalone preset.
+// Complete navigation designs add navigation tokens to each template, paired
+// CSS mode overrides, one navigation-styles.json source, and matching guidance.
+// Paired CSS also retains scoped detail-canvas and toolbar contrast corrections.
+// Restored selected-item shadows include the common CSS rule and template guidance.
+// All 34 themes now ship three-file bundles; 15 migrated themes add CSS and layout assets.
+// Navigation borders add three state tokens, top-tab surfaces and shared CSS consumers.
+// Anonymous form submission guidance adds about 14 KiB of required runtime skill content.
+// app-entry/fix-theme commands and WAF-safe authoring guidance push the gzipped tarball
+// past the previous 2128 KiB ratchet (CI Node 20 gzip runs ~2 KiB heavier than newer Node).
+// Retain modest growth headroom and round budgets to 16 KiB boundaries.
+const MAX_TARBALL_BYTES = 2144 * 1024;
+const MAX_UNPACKED_BYTES = 8000 * 1024;
+// Plan confirmation payload and explicit part rebase add two runtime modules.
+// app-entry/fix-theme commands and the WAF-safe authoring guidance add three packaged files.
+const MAX_ENTRY_COUNT = 605;
 const MAX_SINGLE_FILE_BYTES = 512 * 1024;
 
 const REQUIRED_PACKAGE_FILES = [
   'bin/yida.js',
   'lib/app/create-form/batch.js',
   'lib/app/application-entry-urls.js',
+  'lib/app/app-entry.js',
   'lib/app/inline-css-guard.js',
   'lib/app/canvas-icon-guard.js',
   'lib/app/canvas-navigation-guard.js',
@@ -34,6 +47,8 @@ const REQUIRED_PACKAGE_FILES = [
   'lib/asset/asset-execution.js',
   'lib/app/canvas-icon-exports.json',
   'lib/design-plan/preview.js',
+  'lib/design-plan/confirmation.js',
+  'lib/design-plan/rebase.js',
   'lib/design-plan/entry-navigation.js',
   'lib/design-plan/navigation-policy.js',
   'yida-skills/skills/yida-app/references/entry-navigation.md',
@@ -50,7 +65,16 @@ const REQUIRED_PACKAGE_FILES = [
   'yida-skills/skills/yida-requirement-analysis/references/experience-groups.md',
   'yida-skills/skills/yida-requirement-analysis/references/handoff.md',
   'yida-skills/skills/yida-design/references/navigation-decision.md',
-  'yida-skills/skills/yida-design/sub_skill/yida-design-plan/templates/design-themes/basic-tokens.json',
+  'yida-skills/skills/yida-design/templates/design-themes/index.json',
+  'yida-skills/skills/yida-design/templates/design-themes/basic-tokens.json',
+  'yida-skills/skills/yida-design/templates/navigation-styles.json',
+  'lib/app/application-style.js',
+  'yida-skills/skills/yida-design/references/application-style-library.md',
+  'yida-skills/skills/yida-design/references/theme/application-style-recipes.css',
+  ...require('../yida-skills/skills/yida-design/templates/design-themes/index.json').themes
+    .flatMap(theme => [theme.templatePath, theme.cssTemplatePath, theme.formLayoutPath]
+      .map(file => `yida-skills/skills/yida-design/${file}`)),
+  'yida-skills/skills/yida-design/scripts/validate_design_themes.py',
   'lib/samples/openyida-scaffold/canvas-dialog.canvas.jsx',
   ...['shared', 'sidebar', 'side', 'top', 'mixed', 'dock', 'tabs', 'data', 'content'].map(name => `lib/samples/openyida-scaffold/canvas-nav/${name}.jsx`),
   'yida-skills/skills/yida-canvas-custom-page/references/dialog-guide.md',
@@ -63,6 +87,8 @@ const FORBIDDEN_PACKAGE_PREFIXES = [
   'scripts/e2e-real/',
   'scripts/eval/',
   'tests/',
+  'yida-skills/skills/yida-design/references/style-designs/',
+  'yida-skills/skills/yida-design/sub_skill/yida-design-plan/templates/design-themes/',
 ];
 
 const ALLOWED_PACKAGE_SCRIPTS = new Set([
@@ -166,6 +192,14 @@ function validatePackageContents(files) {
   for (const requiredPath of REQUIRED_PACKAGE_FILES) {
     if (!packagePaths.has(requiredPath)) {
       fail(`required runtime file is missing: ${requiredPath}`);
+    }
+  }
+
+  const themeRoot = 'yida-skills/skills/yida-design/';
+  const themeIndex = JSON.parse(fs.readFileSync(path.join(__dirname, '..', themeRoot, 'templates/design-themes/index.json'), 'utf8'));
+  for (const theme of themeIndex.themes) {
+    if (!packagePaths.has(themeRoot + theme.templatePath)) {
+      fail(`shared theme template is missing: ${themeRoot + theme.templatePath}`);
     }
   }
 

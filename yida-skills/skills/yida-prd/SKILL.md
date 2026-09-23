@@ -1,6 +1,6 @@
 ---
 name: yida-prd
-description: 基于整理好的需求事实规划业务，生成 prd/<项目名>/prd.md，负责业务、资源、页面、顺序和验收规则。
+description: 基于整理好的需求事实编写或修改业务 PRD，负责业务、资源、页面、顺序和验收规则。
 ---
 
 # yida-prd
@@ -20,7 +20,7 @@ description: 基于整理好的需求事实规划业务，生成 prd/<项目名>
 | Fast | 与 `yida-design` 并行，按 [11 章 PRD 契约](workflow/output-prd.md) 写入完整 `prd.md` |
 | Plan | 按 [计划业务规划](workflow/plan-business.md) 补齐 `build-plan.json` 的 `overview`、`dataModels`、`businessFlows`、`pages` 和业务 `execution`，交给 `yida-app` 调用 CLI 派生同一契约的 PRD |
 
-Plan 的业务调整通过字段级 patch 更新源事实，再由编排重新物化和确认。
+修改已有 PRD 时，只读并修改相关业务内容及其引用。Plan 按 [局部调整](../yida-app/workflow/plan/step-4-deliver.md#4-处理调整) 更新源字段，由 CLI 同步文档；Fast 直接修改 PRD 对应章节，保持其他章节原样。
 
 ## 业务要求
 
@@ -30,6 +30,7 @@ Plan 的业务调整通过字段级 patch 更新源事实，再由编排重新�
 - 用户存在 `explicitScope` 时，以该范围规划页面、表单、流程、报表和本轮交付。
 - 真实 `appType`、`formUuid`、`fieldId`、`processCode` 以资源证据为准；实现阶段产生的 ID 写入 `.cache/<项目名>-schema.json`。
 - 每个 display 页面提供 `pageSpecHandoff`，包含场景、区块、数据来源、主操作，以及指向对应 `design.md` 的 `designFile` / `designRefs`。视觉细则由 `yida-design` 维护。
+- 导航结构、菜单顺序和默认入口由业务任务确定；导航外观与应用框架、表单、记录详情和自定义页面交给 `yida-design` 统一设计。PRD 保留整体风格摘要与设计引用，完整 token 和消费规则只在 `design.md` 维护。
 
 ## 按需参考
 

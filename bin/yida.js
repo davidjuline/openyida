@@ -526,6 +526,7 @@ function printManifestCommandHelp(commandName) {
   printCommandUsage(...entries.flatMap((entry) => [
     entry.usage,
     entry.description,
+    ...(entry.notes || []),
     ...(entry.examples || []),
   ]));
   return true;
@@ -742,6 +743,12 @@ async function main() {
       break;
     }
 
+    case 'app-entry': {
+      const { run } = require('../lib/app/app-entry');
+      await run(args);
+      break;
+    }
+
     case 'app-list': {
       const { run } = require('../lib/app/app-list');
       await run(args);
@@ -804,6 +811,12 @@ async function main() {
 
     case 'check-prd-completeness': {
       const { run } = require('../lib/app/check-prd-completeness');
+      await run(args);
+      break;
+    }
+
+    case 'check-design': {
+      const { run } = require('../lib/design/check-design');
       await run(args);
       break;
     }
@@ -1019,9 +1032,6 @@ async function main() {
     }
 
     case 'create-process': {
-      if (args.length < 2) {
-        throwCliUsage(t('cli.create_process_usage'), t('cli.create_process_example'));
-      }
       const { run: runCreateProcess } = require('../lib/process/create-process');
       await runCreateProcess(args);
       break;

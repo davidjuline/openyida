@@ -149,7 +149,7 @@
 - 只有宽泛应用名称且缺少模块、场景、任务、流程和可读需求时才问应用范围。
 - 审批、角色权限、字段、首页、看板、页面和常规流程细节不进入 `ask_human`；用户已提供时承接，未提供时基于业务推断并在最终计划统一呈现。
 - 来源不可读时只生成来源补齐问题。
-- 视觉问题生成恰好三套完整方向；选中后原子写入 `visualDirection`、`internal.selectedTheme`、`colorStrategy` 和 `navigationStyle`，未选候选不写入最终 JSON。
+- 需要视觉比较时提供两个具体方向与一个自由创意选项；自由创意从业务独立推演。选中后原子写入 `visualDirection`、`internal.selectedTheme`、`colorStrategy` 和 `navigationStyle`，自由创意还须补 `visualStyle.creativeDirection` 与显式 Token；未选候选不写入最终 JSON。详见[应用风格模板与自由创意](../../../references/application-style-library.md)。
 
 `askhuman` 保留为 `build-plan.json` 的存储字段名；技能动作和用户交互统一称为 `ask_human`。
 
@@ -317,15 +317,16 @@
 | constraints | 保留 brandColors、preferredTone、forbiddenColors、avoidPatterns、referenceMaterials、accessibilityLevel |
 | forUser.visualDirection | 已选方向的 label、description、source |
 | forUser.colorStrategy | 项目主色、来源与用法；格式沿用紧凑契约 |
-| forUser.navigationStyle | structure=top/side、tone=light/dark、source、selectionReason |
+| forUser.navigationStyle | structure=top/side 由业务导航决定；tone=light/dark 与 toneSource=theme_derived 由 CLI 从所选主题模板派生；另含 source、selectionReason |
 | internal.selectedTheme | themeId、source、customText；label、templatePath 和 summary 由主题索引补齐 |
-| forUser.themeProfile | 主题索引 defaultProfile 的只读摘要 |
-| forUser.pageApplications | 按 pageId 对应实际页面，仅维护视觉差异和 visualMemoryApplications；每个记忆点含 name、renderPolicy、target、reason，visualMemories 由其名称派生 |
+| forUser.themeProfile | 由选中主题 token、正文规则和项目视觉选择派生的只读摘要 |
+| forUser.pageApplications | 按 pageId 对应实际页面；最终物化必填 firstScreenFocus/primaryAction/layout/responsive 非空字符串与 acceptanceChecks 非空字符串数组，按需补局部差异；visualMemoryApplications 必须为数组，无适用项填 []；记忆点含 name、renderPolicy、target、reason |
+| forUser.iconSystem | 可选，library 为 lucide-react 或 @ant-design/icons，mappings 记录实际语义到具体组件；沿用 brief，未配置才用默认空映射 |
 | forUser.assetStrategy | 页面图片用途、槽位与缺口，沿用[素材交接契约](../../../../yida-image-assets/references/manifest-contract.md)；保留 materialStatus、pages、missingAssets、notes |
 | forUser 的各项 Summary、styleSource、designMdReady | 从主题、项目选择和生成状态派生；已有项目差异保留 |
 | forDesignMd | designTemplate、pagePatterns、themeStrategy 由 CLI 派生，productTopologyApplication 保留项目形态差异 |
 
-逐页视觉应用的 surface、primaryAction、states 和 visualApplication 默认继承全局主题。定制内容写在对应页面；通用 token、组件和响应式规则由完整主题模板提供。
+逐页 surface、states 和 visualApplication 可保留公共基准并补项目差异；首屏焦点、主操作及位置、布局、响应式与验收必须是当前页具体决定。缺项草稿可预览，最终物化要求补齐，包括旧计划；纯原生页无逐页设计门槛。最终文档格式与索引只按 [公共输出契约](../../../workflow/output-design.md) 执行。
 
 ## 结构约束
 
@@ -335,9 +336,9 @@
 - `businessDomain` 决定业务对象与流程，`experienceTopology` 描述项目结构；两者都不排除或绑定视觉主题。
 - `visualStyle.forUser.pageApplications` 与 `pages.customPageDetails[]` 按 `pageId` 一一对应，只记录项目真实存在的自定义页面。
 - 页面视觉应用先消费全应用 Token 和页面已有组件，再匹配视觉记忆点；新计划不维护一份固定页面类型规则表。
-- 1.x 结构中的 `candidateThemes` 与 `selectedTheme` 必须从 [主题索引](../templates/design-themes/index.json) 取得；2.0 不保存任何未选候选，模板路径由 `visualStyle.internal.selectedTheme.themeId` 确定性补齐。
+- 1.x 结构中的 `candidateThemes` 与 `selectedTheme` 必须从 [主题索引](../../../templates/design-themes/index.json) 取得；2.0 不保存任何未选候选，模板路径由 `visualStyle.internal.selectedTheme.themeId` 确定性补齐。
 - `forDesignMd.designTemplate` 必须与 `visualStyle.internal.selectedTheme` 指向同一模板；生成的 `design.md` 不得残留 `{{...}}` 占位符、Token 推导指令、主题 ID、模板名称或模板路径。
-- 主题 ID 仅保存在 2.0 `build-plan.json` 的内部字段，模板路径由主题索引补齐；用户可见 HTML 完整展示业务和视觉方案，内部主题 ID 与模板路径保留给执行过程。
+- 主题 ID 仅保存在 2.0 `build-plan.json` 的内部字段，模板路径由主题索引补齐；用户可见 HTML 按 [展示规范](../assets/README.md#需求确认内容范围) 呈现需求确认内容，完整业务与视觉事实仍保留在源文件和执行文档中。
 - 视觉变化不得改写 `pages`；页面规划变化时允许重新生成 `visualStyle.forUser.pageApplications`。
 - `prd.md`、`design.md` 和 `build-plan.html` 必须来自同一个 `meta.revision`；用户确认后把 `meta.status` 更新为 `confirmed`。
 - 确认生成应用前，`build-plan.json` 是唯一搭建计划事实源。
@@ -347,3 +348,5 @@
 ### 紧凑区块输入（schemaVersion 2.0）
 
 `blocks` 支持按优先顺序填写 `{name,purpose}` 数组，两项均为非空文本，每个区块只使用这两个键。CLI 将其转换为区块说明，并在省略时派生 contentPriority 和 contentRichness.contentLayers；明确填写的内容原样保留。旧版字符串数组继续沿用原字段。业务验收条件写入 execution.acceptanceCriteria，与按资源生成的通用检查合并去重。
+
+自由创意（`free-creative`）没有模板导航默认值：在 `navigationStyle.tone` 明确填写项目设计的 `light` 或 `dark`，CLI 标记 `toneSource=project_defined`；此路径可通过 patch 调整 tone，并同步配套导航 Token。命名模板仍按模板派生导航明暗。

@@ -1,6 +1,6 @@
 # YidaCodeCanvas 应用内导航与快捷入口
 
-作用范围先按 PRD 判断：独立前台的 pageSpecHandoff.navigation 只控制当前入口，配合 standalone 页面配置；后台应用导航继续保留。下文自绘应用级导航与全局隐藏规则，仅适用于整个应用采用 custom。前台全码填写按页面设计接入真实数据，下文原生提交页/iframe 规则只用于计划明确复用原生页面的情况。
+作用范围先按 PRD 判断：独立前台的 pageSpecHandoff.navigation 只控制当前入口，配合 standalone 页面配置；后台应用导航继续保留。下文自绘应用级导航与全局隐藏规则，仅适用于整个应用采用 custom。页面内普通表单提交和详情入口必须接入下方标准 iframe 抽屉；全码前台也遵守，不自行实现另一套填写与提交逻辑。
 
 自定义页面里的快捷入口先判定目标类型，再选择跳转方式。目标是应用内页面时，用户应感觉是在宜搭应用导航内切换，而不是弹出一个脱离左侧导航的新页面，也不是在当前自定义页面中额外生成一套侧边导航或顶部应用导航。
 
@@ -175,13 +175,13 @@ PRD 确定使用自定义导航时，按 `design.md` 编写导航 UI，先参考
 
 ## 标准 FormOpenContainer
 
-页面内操作按钮去新增、提交或查看表单详情时，统一封装成同一个 `FormOpenContainer`。按钮事件只调用 `openForm(request)`；新标签只用于外部 URL 或用户主动点击抽屉标题栏的新窗口操作。PC 端容器表现为右侧抽屉 + iframe，移动端直接进入原生表单页，关闭抽屉后触发当前页刷新。应用级办理导航的提交页在主内容区嵌入，导航选中态与当前任务一致。
+页面内操作按钮去新增、提交或查看表单详情时，必须使用 CLI 提供的 `FormOpenContainer` 模板，不凭描述重写同名组件。按钮事件调用 `openForm(request)`，页面 JSX 渲染 hook 返回的 `formOpenContainer`；只有定义没有挂载，不算接入。新标签只用于外部 URL 或用户主动点击抽屉标题栏的新窗口操作。PC 端容器表现为右侧抽屉 + iframe，移动端由模板打开原生表单页，关闭抽屉后触发当前页刷新。已明确的应用级办理导航可在主内容区嵌入原生提交页，导航选中态与当前任务一致。
 
 YidaCodeCanvas 推荐使用 antd `Drawer`。`FormOpenContainer` 只负责打开原生提交页或详情页。通用 `CanvasDrawer` 提供标题栏、全屏/退出全屏、关闭和 `extra` 操作区，表单容器额外提供新窗口打开。普通业务内容容器保持透明，跟随抽屉外壳背景。
 
 抽屉 header 的工具操作统一使用图标按钮：新窗口打开用 `ExternalLink`，全屏/退出全屏用 `Maximize2` / `Minimize2`，关闭用 `X`。表单抽屉三个操作必须齐全，不得替换为“在新窗口打开”“关闭”等可见文字链接，也不得省略全屏。每个按钮提供对应的 `title`、`aria-label` 和可见键盘焦点；全屏按钮同时更新图标、提示和 `aria-pressed`。按钮默认使用中性色，hover、focus 跟随主题。发布前逐一验证三个按钮的实际行为，不以按钮已渲染代替验收。
 
-抽屉外壳默认使用 `var(--pod-shell-theme-bg-color, var(--color-white, #fff))`，标题栏与正文容器透明承接同一底色，不使用 `--pod-card-bg-color` 铺满抽屉。CanvasThemeProvider 同步设置 antd Drawer 的组件级背景；其他卡片、弹窗保留各自表面。只有明确的设计覆盖才传 CanvasDrawer.background 或 openForm 的 background，不主动生成卡片色覆盖。iframe 内页面继续使用平台主题。
+抽屉外壳默认使用 `var(--pod-shell-theme-bg-color, var(--color-white, #fff))`，标题栏与正文容器透明承接同一底色，不使用 `--pod-card-bg-color` 铺满抽屉。CanvasThemeProvider 同步设置 antd Drawer 的组件级背景；其他卡片、弹窗保留各自表面。只有明确的设计覆盖才传 CanvasDrawer.background 或 openForm 的 background，不主动生成卡片色覆盖。抽屉外壳的标题、正文和标题栏按钮默认使用 `--pod-page-header-text-color`，回退到 `--color-text1-4`，显式的 drawer 颜色变量仍可覆盖对应角色。外壳背景跟随应用框架，内部 iframe 独立呈现表单或详情页。传入 `background` 时同时检查标题、按钮和正文的可读性。iframe 内页面继续使用平台主题。
 
 提交页和详情页统一由 `FormOpenContainer` 使用 `contentMode="iframe"`：iframe 直接填满标题栏下方的剩余空间，外层不加 `oy-drawer-card`、卡片底色、圆角或 padding，也不设置外层滚动。`oy-drawer-frame` 仅负责尺寸定位和裁切；滚动由 iframe 内页面负责。不要恢复 `calc(100vh - 56px)` 等猜测高度的兜底。
 

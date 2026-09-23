@@ -21,13 +21,23 @@ function listMarkdownAndJsonFiles(dir) {
 
 function isSampleRoutingGuidanceFile(file) {
   const relativePath = path.relative(ROOT, file).replace(/\\/g, '/');
-  if (relativePath.includes('yida-skills/skills/yida-design/references/style-designs/')) {
+  if (relativePath.includes('yida-skills/skills/yida-design/templates/design-themes/')) {
     return false;
   }
   return true;
 }
 
 describe('OpenYida skill contracts', () => {
+  test('Fast and Plan share three visual directions while Plan requires a style choice', () => {
+    const shared = readSkill('yida-skills/skills/yida-design/references/theme-selection.md');
+    const plan = readSkill('yida-skills/skills/yida-app/workflow/plan/workflow.md');
+    const interaction = readSkill('yida-skills/skills/yida-design/references/ask-human-interaction-contract.md');
+    expect(shared).toContain('Fast 与 Plan 使用下面同一套三方向生成规则和候选字段');
+    expect(shared).toContain('Plan 在用户没有明确完整风格时必须展示同样三套方向并通过 `ask_human` 选择');
+    expect(plan).toContain('获得选择或已有明确完整风格后，再继续主题映射和初始化');
+    expect(interaction).toContain('必须使用“应用设计风格”交互展示共用规则生成的三套候选');
+  });
+
   test('platform workspace pages keep cross-module navigation with the host in Fast and Plan', () => {
     const guide = readSkill('yida-skills/skills/yida-canvas-custom-page/references/navigation-and-entry-guide.md');
     expect(guide).toContain('即便使用 React 状态切换');
@@ -127,7 +137,6 @@ describe('OpenYida skill contracts', () => {
     expect(compactSchema).toContain('按优先顺序填写 `{name,purpose}`');
     expect(compactSchema).toContain('与按资源生成的通用检查合并并去重');
     expect(planBusiness).toContain('功能范围、数据与规则、页面组织、关键交互、业务验收');
-    expect(planWorkflow).toContain('绝不写 `visualStyle`');
     expect(planWorkflow).toContain('只物化一次');
     expect(parallel).toContain('业务任务必须先读后写');
     expect(planBusiness).toContain('普通表单的 sampleDataPlan 用 skipReason');
@@ -413,8 +422,6 @@ describe('OpenYida skill contracts', () => {
     expect(postinstall).toContain("['plugin', 'add', CODEX_PLUGIN_NAME + '@' + CODEX_MARKETPLACE_NAME, '--json']");
     expect(postinstall).toContain('应用主题只在应用级统一配置');
     expect(postinstall).toContain('\\`YidaCodeCanvas\\` 页面只在 \\`YidaComp\\` 内消费现有主题 token');
-    expect(postinstall).not.toContain('iframe 中加载同一应用级自定义主题 CSS');
-    expect(postinstall).not.toContain('拿到真实 formUuid 后默认注入 formDetail CSS');
   });
 
   test('skills index carries machine routing hints for high-confusion skills', () => {
@@ -577,7 +584,7 @@ describe('OpenYida skill contracts', () => {
     expect(skill).toContain('use_skill("yida-data-source-connectors")');
     expect(step9).toContain('准备 2-3 句业务交付总结，并给一个名为“应用访问入口”的入口组');
     expect(step9).toContain('新增、修改或发布单个具体页面时，交付当前页面并保持单页范围');
-    expect(step9).toContain('统一工作区或前后台双入口包含经验证的“业务管理入口”');
+    expect(step9).toContain('不分前后台时提供经验证的“系统入口”，分前后台或只有访问后台时提供经验证的“业务后台入口”');
     expect(step9).toContain('一次完整应用 run 交付一组用户可见的“应用访问入口”');
     expect(step9).toContain('用户或调用方明确要求资源清单、资源 UUID/ID、发布状态或测试数据摘要时');
     expect(step9).toContain('终态 artifact 的 `description` 包含简洁的“交付清单”');
@@ -591,7 +598,7 @@ describe('OpenYida skill contracts', () => {
     expect(step9).toContain('前台：`{base_url}/{appType}/custom/{formUuid}`');
     expect(step9).toContain('`application_entry_policy.entries.admin=include`');
     expect(step9).toContain('前台、业务后台、开发者管理后台');
-    expect(step9).toContain('统一工作区时为“应用工作台、开发者管理后台”');
+    expect(step9).toContain('不分前后台时为“系统入口、开发者管理后台”');
     expect(step9).toContain('不得静默省略或声明交付完成');
     expect(step9).not.toContain('值为 `omit` 时不得输出');
     expect(step9).toContain('不把 `g.alicdn.com` 的 `index.css`、`index.js`、`index.html`、`locales/*.json`');
@@ -610,7 +617,7 @@ describe('OpenYida skill contracts', () => {
     expect(step8).toContain('不得以历史版本、编译成功或现有 URL 冒充本轮发布');
   });
 
-  test('unified full app build consumes PRD navigation order and falls back to auto order', () => {
+  test('full app build documents platform sorting commands separately from custom entry navigation', () => {
     const root = readSkill('yida-skills/SKILL.md');
     const app = readSkill('yida-skills/skills/yida-app/SKILL.md');
     const step4 = readSkill('yida-skills/skills/yida-app/workflow/step-4-forms-processes.md');
@@ -627,19 +634,12 @@ describe('OpenYida skill contracts', () => {
     expect(step8).toContain('PRD 写明页面/表单清单顺序：');
     expect(step8).toContain('导航排序必须等待本轮全部页面开发、发布和相关资源创建完成');
     expect(step8).toContain('openyida nav-group order <appType> <页面/表单...>');
-    expect(step8).toContain('PRD 缺少明确页面清单：');
+    expect(step8).toContain('entry-navigation.md#每个入口都确定首页与菜单顺序');
     expect(step8).toContain('openyida nav-group auto-order <appType>');
     expect(step8).toContain('同一搭建 Run 不得同时执行显式排序与自动排序');
-    const explicitNavBranch = step8.slice(
-      step8.indexOf('PRD 写明页面/表单清单顺序：'),
-      step8.indexOf('PRD 缺少明确页面清单：')
-    );
-    const fallbackNavBranch = step8.slice(
-      step8.indexOf('PRD 缺少明确页面清单：'),
-      step8.indexOf('4. 同一搭建 Run')
-    );
-    const explicitNavCommands = explicitNavBranch.match(/```text\n([\s\S]*?)\n```/)[1];
-    const fallbackNavCommands = fallbackNavBranch.match(/```text\n([\s\S]*?)\n```/)[1];
+    const commandBlocks = [...step8.matchAll(/```text\n([\s\S]*?)\n```/g)].map(match => match[1]);
+    const explicitNavCommands = commandBlocks.find(block => block.includes('nav-group order'));
+    const fallbackNavCommands = commandBlocks.find(block => block.includes('nav-group auto-order'));
     expect(explicitNavCommands).not.toContain('--auto-nav-order');
     expect(fallbackNavCommands).not.toContain('nav-group order');
     expect(fallbackNavCommands).toContain('nav-group auto-order');
@@ -721,7 +721,7 @@ describe('OpenYida skill contracts', () => {
     expect(blueprint).toContain('`entryMode` 只允许 `platform-shell` 或 `standalone`');
     expect(step8).toContain('openyida update-form-config <appType> <displayPageFormUuid> false');
     expect(step8).toContain('openyida get-form-config <appType> <displayPageFormUuid> --json');
-    expect(step8).toContain('只有回读明确为 `isRenderNav=false`');
+    expect(step8).toContain('只有回读明确为 `renderNav=false`');
     expect(pageConfig).toContain('PRD 已把主页面明确标记为 `entryMode=standalone`');
     expect(feature).toContain('| 仅前台 | 已验证的独立业务入口 |');
     expect(feature).toContain('| 前后台双入口 | 独立业务入口和业务管理入口 |');
@@ -742,9 +742,9 @@ describe('OpenYida skill contracts', () => {
     const outputDesign = readSkill('yida-skills/skills/yida-design/workflow/output-design.md');
     const pageDesign = readSkill('yida-skills/skills/yida-design/sub_skill/page-design/SKILL.md');
     const pageGeneration = readSkill('yida-skills/skills/yida-canvas-custom-page/references/page-generation-guide.md');
-    const styleSelection = readSkill('yida-skills/skills/yida-design/references/style-design-selection.md');
+    const styleSelection = readSkill('yida-skills/skills/yida-design/references/theme-selection.md');
     const scaffoldRecipes = readSkill('yida-skills/skills/yida-design/references/visual-scaffold-recipes.md');
-    const styleRegistry = readSkill('yida-skills/skills/yida-design/references/style-designs/registry.md');
+    const themeCatalog = JSON.parse(readSkill('yida-skills/skills/yida-design/templates/design-themes/index.json'));
     const dataManagement = readSkill('yida-skills/skills/yida-data-management/SKILL.md');
     const formPage = readSkill('yida-skills/skills/yida-create-form-page/SKILL.md');
     const appStep2 = readSkill('yida-skills/skills/yida-app/workflow/step-2-design.md');
@@ -804,7 +804,7 @@ describe('OpenYida skill contracts', () => {
     expect(appStep2).toContain('沿用用户最后一次明确选择');
     expect(designMode).toContain('其他回答只更新各自声明的字段');
     expect(skill).toContain('与当前 revision 匹配的 `confirm_build`');
-    expect(skill).toContain('素材进度同步保留已有确认');
+    expect(skill).toContain('素材进度更新不改变已有的需求确认和模式选择');
     expect(prd).toContain('生成 `prd/<项目名>/prd.md`');
     expect(prd).toContain('基于输入事实');
     expect(design).toContain('输出 `design.md`');
@@ -813,112 +813,100 @@ describe('OpenYida skill contracts', () => {
     expect(design).not.toContain('推荐模板');
     expect(output).toContain('## PRD 输出格式');
     expect(output).not.toContain('## design.md 输出格式');
-    expect(outputDesign).toContain('## design.md 输出格式');
+    // Fast and Plan share a document contract while keeping different authoring paths.
+    expect(outputDesign).toContain('Fast 手写项目 `design.md`，Plan 由 CLI 物化生成');
+    expect(outputDesign).toContain('## frontmatter 规范');
     expect(outputDesign).toContain('## 稳定引用规则');
-    expect(outputDesign).toContain('sceneRecipes.<sceneKey>');
-    expect(outputDesign).toContain('`sceneKey` 必须直接取自 `requirement-brief.json`');
+    expect(outputDesign).toContain('Fast 保留 PRD 的 Markdown 逐页块与 `pageSpecHandoff` 格式');
+    expect(outputDesign).toContain('按 `pageId`、`designFile` 和 `designRefs` 核对页面与引用');
+    expect(outputDesign).toContain('Plan 使用已有 JSON 交接记录；不要求 Fast 转换成 Plan PRD');
+    expect(outputDesign).toContain('## 正文构成');
+    expect(outputDesign).toContain('## 校验与交接');
+    for (const field of ['schemaVersion', 'name', 'description', 'tokens.application-global', 'tokens.custom-page', 'themeProfile', 'sceneRecipes', 'components', 'states', 'assetStrategy', 'iconSystem']) {
+      expect(outputDesign).toContain('`' + field + '`');
+    }
+    expect(outputDesign).toContain('必填字符串 `"1.0"`');
+    expect(outputDesign).toContain('themeFile');
+    expect(outputDesign).toContain('current-app-theme');
+    expect(outputDesign).toContain('`version`、`design_id`、`yidaThemeDelivery` 不再是项目必填字段');
+    expect(outputDesign).toContain('仅 Plan 可选');
+    expect(outputDesign).toContain('完整解析为对象');
+    expect(outputDesign).toContain('字符串统一使用正确转义的引号');
+    expect(outputDesign).toContain('HEX 颜色必须加引号，否则 YAML 会将其当作注释');
+    expect(outputDesign).toContain('token 数值可写数值或字符串');
+    expect(outputDesign).toContain('先出现唯一 H1');
+    expect(outputDesign).toContain('每条完整规则只写一次');
+    expect(outputDesign).toContain('不保存 `rules`、页面布局或组件正文副本');
+    expect(outputDesign).toContain('`sceneRecipes.<sceneKey>.pages[]` 每项仅保存 `pageId` 和 `anchor`');
+    expect(outputDesign).toContain('<a id="page-…"></a>');
+    expect(outputDesign).toContain('不翻译或重新命名');
+    expect(outputDesign).toContain('`components.<componentName>`');
+    expect(outputDesign).toContain('`states.<stateName>`');
+    expect(outputDesign).toContain('保持 frontmatter 单行 JSON 兼容');
+    expect(outputDesign).toContain('iconSystem.mappings');
+    expect(outputDesign).toContain('主题交付统一放在 `themeProfile`');
     expect(output).toContain('[yida-design 的稳定引用规则](../../yida-design/workflow/output-design.md#稳定引用规则)');
     expect(output).toContain('`sceneKey` 必须逐字取自 `requirement-brief.json` 的对应 `pageScenes`');
-    expect(outputDesign).toContain('states:');
-    expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design/workflow/step-1-positioning.md'))).toBe(false);
-    expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design/workflow/step-3-information-architecture.md'))).toBe(false);
-    expect(outputDesign).toContain('themeProfile:');
-    expect(outputDesign).toContain('yidaThemeDelivery:');
-    expect(outputDesign).toContain('themeDelivery: <app-custom-theme-file / current-app-theme>');
-    expect(outputDesign).not.toContain('themeConsistency:');
-    expect(outputDesign).not.toContain('表单边界');
-    expect(outputDesign).not.toContain('不写入自定义主题代码');
-    expect(output).not.toContain('表单实现边界');
-    expect(output).not.toContain('主题实现边界');
-    expect(outputDesign).toContain('## 18. 实现适配');
-    expect(outputDesign).toContain('### Yida Application Theme Delivery Contract');
-    expect(outputDesign).toContain('customThemeTemplate: yida-design/references/theme/app-custom-theme-template.css');
-    expect(output).toContain('再交给 `yida-canvas-custom-page` 实现');
+    expect(outputDesign).toContain('openyida check-design prd/<项目名>/design.md --json');
+    expect(outputDesign).toContain('--prd prd/<项目名>/prd.md --json');
+    expect(appStep2).toContain('openyida check-design');
+    expect(outputDesign).toContain('Plan 物化内部使用同一校验');
+    for (const point of ['页面任务', '首屏焦点', '布局', '表面与组件', '主操作', '状态', '响应式', '验收']) {
+      expect(outputDesign).toContain('| ' + point + ' |');
+    }
+    expect(outputDesign).toContain('不强制重复建立 `visualScaffold`');
+    expect(outputDesign).toContain('不保留“请填入下方”“生成时替换”等编写任务');
+    expect(outputDesign).toContain('圆角、padding、gap、密度、背景与卡片关系按选中主题和真实任务执行');
+    expect(outputDesign).toContain('同色画布与面板可通过边界、共容器和留白建立层次');
+    expect(outputDesign).toContain('渐变、玻璃、阴影、纹理不互相强制绑定');
+    expect(outputDesign).toContain('reduced motion');
+    expect(outputDesign).toContain('七个品牌色阶为 1/2/3/5/6/9/10');
+    expect(outputDesign).toContain('移动端品牌桥接由公共 CSS 模板保留');
+    expect(outputDesign).toContain('## 应用主题 CSS 的职责');
+    expect(outputDesign).toContain('openyida sample yida-design app-theme');
     expect(outputDesign).toContain('页面实现交给 `yida-canvas-custom-page`。');
     expect(pageDesign).toContain('交给 `yida-canvas-custom-page` 实现');
     expect(outputDesign).not.toContain('cliApply:');
-    expect(outputDesign).toContain('--color-brand1-1: <明亮品牌浅色或浅 hover 色>');
-    expect(outputDesign).toContain('--color-brand1-5: <主色 hover 档>');
-    expect(outputDesign).toContain('--color-brand1-10: <深色或透明强调档>');
-    expect(outputDesign).toContain('不要补造 `--color-brand1-4/7/8`');
-    expect(outputDesign).toContain('--color-brand-1: <移动端品牌色 1>');
-    expect(outputDesign).toContain('--color-brand-4: <移动端品牌色 4>');
-    expect(outputDesign).toContain('backgroundLayer:');
-    expect(outputDesign).toContain('surfaceContrast:');
-    expect(outputDesign).toContain('### Surface Contrast Contract');
-    expect(outputDesign).toContain('white-bg-bordered-card');
-    expect(outputDesign).toContain('gray-bg-white-card');
-    expect(outputDesign).toContain('gradient-bg-glass-card');
-    expect(outputDesign).toContain('页面背景与卡片背景必须形成明显层次对比');
-    expect(outputDesign).toContain('rounded:');
-    expect(outputDesign).toContain('densityRule');
-    expect(outputDesign).toContain('breathingRule');
-    expect(outputDesign).toContain('roundedRule');
-    expect(outputDesign).toContain('卡片圆角范围 0-32px');
-    expect(outputDesign).toContain('卡片 padding 必须大于 20px');
-    expect(outputDesign).toContain('卡片和卡片的 gap 必须小于 20px');
-    expect(outputDesign).toContain('状态摘要 64-88px');
-    expect(outputDesign).toContain('### Background Layer Contract');
-    expect(outputDesign).toContain('softTintCanvas');
-    expect(outputDesign).toContain('topIrregularWash');
-    expect(outputDesign).toContain('flowLight');
-    expect(outputDesign).toContain('prefers-reduced-motion');
-    expect(outputDesign).toContain('已写清对比度、内容栅格和 reduced motion 静态降级');
+    expect(outputDesign).not.toContain('themeConsistency:');
     expect(output).not.toContain('## PRD 模板');
     expect(output).not.toContain('推荐模板');
     expect(output).not.toContain('区别于 sample 默认风格');
     expect(step3).toContain('每个页面写清 scene、目标用户、主任务和需要设计的区块');
     expect(step3).toContain('页面区块 / contentBlocks：<工作台、首页、门户、看板、展示页和业务入口页推荐逐条列出 8-10 个区块以上');
     expect(step3).not.toContain('推荐模板');
-    expect(step5).toContain('示例品牌名、默认指标和通用卖点');
-    expect(step5).not.toContain('sample 品牌名');
     expect(design).toContain('完整应用输出一份应用级 `design.md`');
-    expect(outputDesign).toContain('visualScaffold');
-    expect(design).toContain('[视觉输出契约](workflow/output-design.md)');
+    expect(design).toContain('[唯一输出契约](workflow/output-design.md)');
     expect(design).toContain('实现交接明确');
     expect(prd).toContain('每个 display 页面提供 `pageSpecHandoff`');
-    expect(step5).toContain('`visualScaffold`：给所有页面实现使用的硬骨架');
-    expect(step5).toContain('读取 [视觉结构配方库](../references/visual-scaffold-recipes.md)');
-    expect(step5).toContain('读取 [页面质量门禁](../references/page-quality-gates.md)');
-    expect(step5).toContain('`surfaceMap` 写清每个区块的容器形态');
-    expect(step5).toContain('源码槽位写清 `rootShell`、`prioritySurface`');
-    expect(step5).toContain('这些字段要能直接指导实现，而不是形容词');
-    expect(readSkill('yida-skills/skills/yida-design/references/visual-scaffold-recipes.md')).toContain('## 源码级槽位');
-    expect(readSkill('yida-skills/skills/yida-design/references/visual-scaffold-recipes.md')).toContain('`prioritySurface`：首屏最大视觉锚点');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('## 6. 双文件输出门禁');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('缺少 `pageSpecHandoff`、缺少 `design.md`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('## 5. 视觉层次门禁');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('`backgroundLayer`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('`surfaceMaterial`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('`surfaceContrast`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('圆角、间距与呼吸感门禁');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('`densityRule`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('`breathingRule`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('`roundedRule`');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('背景层推荐要求');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('背景可以不规则，内容必须规则');
-    expect(readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md')).toContain('浅灰背景（如 `#F3F4F6`）配白色无边框卡片');
+    expect(step5).toContain('[输出契约](output-design.md)');
+    expect(step5).toContain('[视觉结构配方](../references/visual-scaffold-recipes.md)');
+    expect(step5).toContain('[页面质量门禁](../references/page-quality-gates.md)');
+    expect(step5).toContain('不要求把这些概念全部变为 `visualScaffold` 等结构化字段');
+    const gates = readSkill('yida-skills/skills/yida-design/references/page-quality-gates.md');
+    expect(gates).toContain('## 6. 双文件输出门禁');
+    expect(gates).toContain('## 5. 视觉层次门禁');
+    expect(gates).toContain('缺少 `pageSpecHandoff`、设计文件、有效设计引用');
+    expect(gates).toContain('八项要点');
+    expect(gates).toContain('不要求对应同名英文字段');
+    expect(gates).toContain('圆角、间距与呼吸感门禁');
+    expect(gates).toContain('页面背景与内容层次符合主题定义');
+    expect(scaffoldRecipes).toContain('## 将配方落实为页面设计');
     expect(scaffoldRecipes).toContain('## 背景层配方');
     expect(scaffoldRecipes).toContain('radialGlowWash');
     expect(scaffoldRecipes).toContain('organicNoise');
-    expect(scaffoldRecipes).toContain('背景和卡片不可相近或相同');
-    expect(design).toContain('[design.md 输出格式](workflow/output-design.md)');
+    expect(scaffoldRecipes).toContain('选中主题');
     expect(output).toContain('- pageSpecHandoff：');
-    expect(outputDesign).toContain('- visualScaffold：<rootShell / prioritySurface / statusPrimitive / actionPrimitive / contentPrimitive / contextPrimitive / statePrimitive / responsiveRule / breathingRule>');
-    expect(outputDesign).toContain('- surfaceContrast：<页面背景与卡片背景的层次搭配');
     expect(output).toContain('- designFile：<prd/<项目名>/design.md>');
     expect(output).toContain('- designRefs：<themeProfile / sceneRecipes.<scene> / components.<name> / states.<name>>');
-    expect(design).toContain('[视觉结构配方库](references/visual-scaffold-recipes.md)');
-    expect(design).toContain('[页面质量门禁](references/page-quality-gates.md)');
     expect(pageGeneration).toContain('## 页面场景到实现入口');
-    expect(pageGeneration).toContain('PRD 用来确认页面场景、区块、数据来源、主操作和移动端要求');
-    expect(pageGeneration).toContain('design.md 用来确认主题色、页面风格、视觉 DNA、布局配方、材质、圆角、密度、呼吸感、组件和状态规则');
-    expect(pageGeneration).toContain('实现页面背景和卡片时必须消费 `surfaceContrast`');
-    expect(pageGeneration).toContain('源码不得输出浅底白卡无边框');
-    expect(pageGeneration).toContain('实现时按下表选择页面结构');
+    expect(pageGeneration).toContain('按显式 anchor 找到当前页八项设计与共享规则');
+    expect(pageGeneration).toContain('同色画布与卡片可以通过细边界、共容器或留白建立层次');
+    expect(pageGeneration).not.toContain('卡片 padding >20px');
+    expect(pageGeneration).not.toContain('页面背景与卡片背景不可相近或相同');
+    expect(pageGeneration).toContain('圆角、padding、gap 和密度采用选中主题与当前页决定');
+    expect(pageGeneration).toContain('设计需要背景装饰层时');
     expect(pageGeneration).toContain('## Source Of Truth');
     expect(pageGeneration).toContain('spec 与 PRD/design.md 冲突时，按这两份文件重新生成 spec');
-    expect(pageGeneration).toContain('手写页面可直接使用这两份文件；使用生成器时，先整理 `page-spec.json`');
     expect(pageGeneration).toContain('`sourceOfTruth` 填写 `prdFile`、`designFile`、`designRefs` 和 `conflictPolicy = "prd-design-win"`');
     expect(pageGeneration).toContain('视觉部分保存 `designFile/designRefs` 和一致的 `themeSummary`，完整视觉规则从 design.md 读取');
     expect(pageGeneration).toContain('## 修复路径');
@@ -926,13 +914,11 @@ describe('OpenYida skill contracts', () => {
     expect(pageGeneration).toContain('回写 `prd.md`，再重新派生 `page-spec.json`');
     expect(pageGeneration).toContain('回写 `design.md`，再重新派生 `page-spec.json` 或重读 design.md 实现');
     expect(pageGeneration).toContain('只有实现偏差才对生成源码做小范围 Edit/patch');
-    expect(pageGeneration).toContain('近白画布如果有渐变、装饰、素材焦点或足够内容密度，可以作为背景感方案');
     expect(pageGeneration).toContain('`.oy-page-root` 承载基础底色');
-    expect(pageGeneration).toContain('主题关系、token、`visualScaffold`、`backgroundLayer`、`surfaceMaterial`、`surfaceContrast`、`colorRoles`、`depthRule`、`roundedRule`、`densityRule`、`breathingRule`、组件规则、状态规则、响应式规则不足或错误');
-    expect(pageGeneration).toContain('所有展示型页面都按当前项目 `design.md` 的 `visualScaffold` 实现');
-    expect(pageGeneration).toContain('`visualScaffold` 必须来自 `design.md`');
-    expect(pageGeneration).toContain('如果当前 `design.md` 缺少 `roundedRule`、`densityRule` 或 `breathingRule`，先回写设计文件再实现');
+    expect(pageGeneration).toContain('不要求旧 `visualScaffold` 或同名 primitive 字段');
     expect(pageGeneration).not.toContain('## 首次生成模板路由');
+    expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design/workflow/step-1-positioning.md'))).toBe(false);
+    expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design/workflow/step-3-information-architecture.md'))).toBe(false);
     expect(output).toContain('## 1. 应用基本信息');
     expect(output).toContain('| 应用类型 | <企业管理 / 经营分析 / 流程审批 / 数据采集 / 客户服务 / 库存进销存 / 项目协作 / 资产设备 / 教育培训 / 知识内容 / 监控指挥 / 官网门户 / 活动报名 / 轻量工具> |');
     expect(output).toContain('| 主题色 | <当前应用主题色 / 用户指定品牌色 / 待创建后回填；写清色值或主题 key> |');
@@ -969,9 +955,10 @@ describe('OpenYida skill contracts', () => {
     expect(output).toContain('## 5. 应用主题与风格摘要');
     expect(output).toContain('| 设计文件 | `prd/<项目名>/design.md` |');
     expect(output).toContain('| 应用主题色 | <平台预置 key 或自定义色盘名称；必须与 design.md 的 Theme Profile 一致> |');
-    expect(output).toContain('| 风格摘要 | <2-3 个业务风格关键词，例如高效协同、稳重可信、经营洞察；完整 UI 设计见 design.md> |');
+    expect(output).toContain('| 风格摘要 | <概括导航、应用框架、表单、记录详情与自定义页面共同采用的视觉特点；完整规则见 design.md> |');
     expect(output).not.toContain('| 导航视觉 |');
     expect(output).toContain('### <页面名>');
+    expect(output).toContain('- pageId：<display-page必填，复用共享需求/设计中的稳定页面ID；原生页面不补造>');
     expect(output).toContain('- 页面类型：<display-page / form-page / process-form / report / detail-entry>');
     expect(output).toContain('- 页面定位：<主入口页面 / 核心业务页 / 详情页 / 报表页 / 配置页；说明为什么需要这个页面>');
     expect(output).toContain('- 页面关系：<从哪里进入、下一步去列表 / 看板 / 表单提交 / 详情 / 报表中的哪一个>');
@@ -991,30 +978,28 @@ describe('OpenYida skill contracts', () => {
     expect(output).toContain('| 分组 | 页面顺序 | 导航呈现 | 放置原则 |');
     expect(output).toContain('表单/流程在自定义页面之前');
     expect(output).toContain('## 11. 验收标准');
-    expect(design).toContain('[design.md 生成规则](references/style-design-selection.md)');
-    expect(design).toContain('[style-design 风格注册表](references/style-designs/registry.md)');
-    expect(step5).toContain('读取 [design.md 生成规则](../references/style-design-selection.md)');
-    expect(step5).toContain('- designFile：<prd/<项目名>/design.md>');
-    expect(step5).toContain('- baseDesignSource：references/style-designs/<selected-style>.md');
-    expect(styleSelection).toContain('## 输出字段');
-    expect(styleSelection).toContain('当前项目 `design.md` 提供所有页面必须遵守的视觉 DNA、布局、组件样式、主题 token 和状态规则');
-    expect(styleSelection).toContain('| visualScaffold | design.md |');
-    expect(styleSelection).toContain('| rounded / spacing / breathing | design.md |');
-    expect(styleSelection).toContain('读取 [visual-scaffold-recipes.md](visual-scaffold-recipes.md)');
-    expect(styleSelection).toContain('根据行业、品牌、业务情绪、应用主题和用户偏好生成配色');
-    expect(styleSelection).toContain('卡片 padding >20px，卡片间 gap <20px，卡片圆角 0-32px');
+    expect(design).toContain('references/theme-selection.md');
+    expect(design).toContain('templates/design-themes/index.json');
+    expect(step5).toContain('../references/theme-selection.md');
+    expect(styleSelection).toContain('styleSummary');
+    expect(styleSelection).toContain('templatePath');
+    expect(styleSelection).toContain('Fast');
+    expect(styleSelection).toContain('Plan');
+    expect(styleSelection).toContain('visual-scaffold-recipes.md');
+    expect(styleSelection).not.toContain('generated-from-business-context');
+    expect(themeCatalog.themes.length).toBeGreaterThan(0);
+    for (const entry of themeCatalog.themes) {
+      expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design', entry.templatePath))).toBe(true);
+    }
     expect(scaffoldRecipes).toContain('# 视觉结构配方库');
     expect(scaffoldRecipes).toContain('## 配方 A：运营驾驶舱三栏');
     expect(scaffoldRecipes).toContain('左侧 260-320px 指标轨，中间 1fr 主图表区，右侧 280-360px 风险与事件流');
     expect(scaffoldRecipes).toContain('三栏比例存在，不退化为四张等宽 KPI 卡');
     expect(scaffoldRecipes).toContain('## 配方 B：任务工作台双栏');
     expect(scaffoldRecipes).toContain('KPI 组只算 1 个区块，快捷入口组只算 1 个区块');
-    expect(styleRegistry).toContain('_design-md-template.md');
-    expect(styleRegistry).toContain('默认审美方向是“圆润、高密且有呼吸感”');
+    expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design/references/style-designs'))).toBe(false);
+    expect(fs.existsSync(path.join(ROOT, 'yida-skills/skills/yida-design/sub_skill/yida-design-plan/templates/design-themes'))).toBe(false);
     expect(fs.existsSync(path.join(ROOT, 'yida-skills', 'skills', 'yida-design', 'sub_skill', 'workhome-ui-skill', 'SKILL.md'))).toBe(false);
-    const styleDesignEntries = fs.readdirSync(path.join(ROOT, 'yida-skills', 'skills', 'yida-design', 'references', 'style-designs')).sort();
-    expect(styleDesignEntries).toEqual(expect.arrayContaining(['_design-md-template.md', 'registry.md']));
-    expect(styleDesignEntries.length).toBeGreaterThan(2);
     expect(design).not.toContain('workhome-ui-skill');
     expect(step5).not.toContain('workhome-ui-skill');
     expect(output).not.toContain('workhome-ui-skill');
@@ -1045,21 +1030,33 @@ describe('OpenYida skill contracts', () => {
     expect(createForm).toContain('未在当前应用、当前提交链路验证的限制不能作为字段改型依据');
   });
 
-  test('native form pages rely on platform rendering', () => {
+  test('form skill describes supported structure and theme capabilities directly', () => {
     const root = readSkill('yida-skills/SKILL.md');
     const appStep4 = readSkill('yida-skills/skills/yida-app/workflow/step-4-forms-processes.md');
     const createForm = readSkill('yida-skills/skills/yida-create-form-page/SKILL.md');
     const manifest = readSkill('lib/core/command-manifest.js');
+    const readme = readSkill('README.md');
+    const readmeZh = readSkill('README_zhCN.md');
+    const formProperties = readSkill('yida-skills/skills/yida-create-form-page/references/form-field-properties.md');
 
     expect(root).toContain('默认完成即停止');
     expect(appStep4).toContain('字段结构有 Divider 分组');
     expect(appStep4).toContain('拿到真实 `formUuid` 后写入资源上下文');
-    expect(createForm).toContain('严禁为原生表单或 `formDetail` 生成、注入 CSS、JS、HTML 或主题代码');
-    expect(createForm).toContain('字段 JSON 和表单 Schema JS 只承载表单结构与业务动作');
+    expect(createForm).toContain('可创建 19 种业务字段、Divider 与 ColumnContainer');
+    expect(createForm).toContain('按钮组/操作入口执行业务动作');
+    expect(createForm).toContain('普通业务分组和章节分隔使用 `Divider`');
+    expect(createForm).toContain('横向字段组合使用 `ColumnContainer`');
     expect(createForm).toContain('## 表单布局样式');
-    expect(manifest).toContain('Never inject CSS, JavaScript, HTML, or theme code into native forms or formDetail pages');
-    expect(manifest).not.toContain('FormOpenContainer iframes so all contexts use aligned theme variables');
-    expect(manifest).not.toContain("'form-detail-style.apply'");
+    expect(createForm).toContain('字体、控件、状态、背景与底栏规则写入同一份应用主题 CSS');
+    expect(readme).toContain('action groups trigger business actions');
+    expect(readmeZh).toContain('操作按钮组执行业务动作');
+    [createForm, readme, readmeZh, formProperties].forEach(content => {
+      expect(content).not.toMatch(/展示布局组件|展示组件/);
+    });
+    expect(manifest).toContain('Native forms use a component tree with top, left, main, right and between-field regions');
+    expect(manifest).not.toMatch(/field-and-group list|Schema capability limit|silently flatten/);
+    expect(manifest).toContain('Use yida-create-form-page for form structure and business actions');
+    expect(manifest).toContain('apply shared app configuration, application theme, and navigation order afterward');
   });
 
   test('Canvas form data pages use yida JS API bridge before endpoint fallback', () => {
@@ -1337,7 +1334,8 @@ describe('OpenYida skill contracts', () => {
     const pageUiux = readSkill('yida-skills/skills/yida-design/SKILL.md');
     const step2 = readSkill('yida-skills/skills/yida-design/workflow/step-2-theme-system.md');
     const outputDesign = readSkill('yida-skills/skills/yida-design/workflow/output-design.md');
-    const styleSelection = readSkill('yida-skills/skills/yida-design/references/style-design-selection.md');
+    const styleSelection = readSkill('yida-skills/skills/yida-design/references/theme-selection.md');
+    const navShellPatterns = readSkill('yida-skills/skills/yida-nav-shell/references/nav-shell-patterns.md');
     const canvasStyleGuide = readSkill('yida-skills/skills/yida-canvas-custom-page/references/canvas-style-implementation-guide.md');
     const presets = readSkill('yida-skills/skills/yida-design/references/theme/theme-token-presets.md');
     const customThemeTemplate = readSkill('yida-skills/skills/yida-design/references/theme/app-custom-theme-template.css');
@@ -1426,31 +1424,32 @@ describe('OpenYida skill contracts', () => {
     expect(theme).toContain('严禁页面代码修改或向上层注入主题变量');
     expect(theme).toContain('workflow/output-design.md#cli-token-契约fast--plan-共用');
     expect(theme).toContain('outputs.theme');
-    expect(theme).toContain('不得用 Python、Node、Shell 或 `run_workspace_script` 脚本');
-    expect(theme).toContain('校验脚本只能读取并报告问题，不能改写主题文件');
+    expect(theme).toContain('references/application-theme-consistency.md');
     expect(theme).not.toContain('文件复制能力');
     expect(step2).toContain('output-design.md#cli-token-契约fast--plan-共用');
     expect(step2).toContain('Plan 复用已生成的主题 CSS');
-    expect(step2).toContain('不得用 Python、Node、Shell 或 `run_workspace_script` 脚本');
-    expect(step2).toContain('校验脚本只能读取并报告问题，不能改写主题文件');
+    expect(step2).toContain('../references/application-theme-consistency.md');
     expect(step2).not.toContain('文件复制能力');
     expect(outputDesign).toContain('只能由上述 OpenYida CLI 契约生成或更新');
     expect(outputDesign).toContain('不得另写 Python、Node、Shell 或 `run_workspace_script` 临时脚本');
     expect(outputDesign).toContain('校验脚本只能读取并报告问题，不能改写主题文件');
-    expect(step2).toContain('若截图或预览中出现左侧导航选中态与页面主操作颜色不一致');
-    expect(styleSelection).toContain('应用主题主导，生成色彩作为辅助色');
+    expect(outputDesign).toContain('`--pod-nav-menu-item-selected-shadow` 作为方向无关的基础外观 Token 独立透传');
+    expect(navShellPatterns).toContain('| 菜单选中标记 | `--pod-nav-menu-item-selected-shadow`');
+    expect(navShellPatterns).toContain('`canvas-nav-side/top/mixed/dock` 共用上述菜单圆角、三种边框和选中阴影');
+    expect(step2).toContain('导航选中态与按钮不同色不直接判为冲突');
+    expect(styleSelection).toContain('沿用已确认主题，只补当前页面');
     expect(canvasStyleGuide).toContain('按本指南把 `design.md` 的布局、材质、密度、图表和控件样式写入 Canvas 页面');
     expect(canvasStyleGuide).toContain('业务事实来自 `yida-prd` 输出的 `prd.md`，视觉事实来自 `yida-design` 输出的 `design.md`');
     expect(canvasStyleGuide).toContain('## 应用主题与页面风格冲突处理');
-    expect(canvasStyleGuide).toContain('默认值是 `跟随应用主题`，不是 `跟随生成色盘色相`');
+    expect(canvasStyleGuide).toContain('品牌、操作和信息强调可以用不同颜色，但必须属于同一份项目设计');
     expect(canvasStyleGuide).toContain('openyida sample openyida-page-template canvas-theme');
-    expect(canvasStyleGuide).toContain('当前脚本不自动映射尺寸、圆角、字体、图表色组或完整 CSS 选择器');
+    expect(canvasStyleGuide).toContain('当前脚本也不自动映射尺寸、圆角、字体、图表色组或完整 CSS 选择器');
     expect(canvasStyleGuide).toContain('antd 页面统一使用');
     expect(step2).toContain('`--color-brand1-*` 是页面和 PC 端主要消费的品牌色阶');
     expect(step2).toContain('是平台主题契约要求的品牌色阶，由应用自定义主题文件统一提供');
     expect(step2).toContain('`--color-brand-*` 是移动端和部分原生表单/壳层消费的品牌色阶');
-    expect(step2).toContain('| `--color-brand1-1` | 明亮品牌浅色或浅 hover 色 |');
-    expect(step2).toContain('| `--color-brand1-5` | 主色 hover 档 |');
+    expect(step2).toContain('| `--color-brand1-1` | 品牌交互悬停色 |');
+    expect(step2).toContain('| `--color-brand1-5` | 品牌派生深色 |');
     expect(step2).toContain('`4/7/8` 不在平台契约内，不得由 AI 猜测补齐');
     expect(step2).toContain('| `--color-brand-4` | 移动端深品牌档 4 |');
     for (const index of [1, 2, 3, 5, 6, 9, 10]) {
@@ -1459,10 +1458,12 @@ describe('OpenYida skill contracts', () => {
     for (const index of [4, 7, 8]) {
       expect(customThemeTemplate).not.toMatch(new RegExp(`--color-brand1-${index}\\s*:`));
     }
-    expect(customThemeTemplate).toContain('默认呈现大圆角与 coffee 咖啡色主题');
+    expect(customThemeTemplate).toContain('最终配色和圆角以 design.md 的 tokens 为准');
+    expect(customThemeTemplate).toContain('--design-file <design.md> --output <app-theme.css>');
     expect(customThemeTemplate).toContain('不要补造 4、7、8');
     expect(customThemeTemplate).toContain('--pod-default-border-radius: 20px;');
-    expect(customThemeTemplate).toContain('--pod-page-border-radius: 20px;');
+    expect(customThemeTemplate).toContain('--pod-page-border-radius: var(--pod-xl-border-radius, 20px);');
+    expect(customThemeTemplate).toContain('--pod-xl-border-radius: var(--corner-5);');
     expect(customThemeTemplate).toContain('--color-brand1-5: rgba(52, 50, 44, 1);');
     expect(customThemeTemplate).not.toContain('openyida create-app');
     expect(customThemeTemplate).not.toContain('openyida update-app');
@@ -1503,13 +1504,27 @@ describe('OpenYida skill contracts', () => {
     const visualEngine = readSkill('yida-skills/skills/yida-design/references/visual-decision-engine.md');
     const dashboardTheme = readSkill('yida-skills/skills/yida-dashboard/references/theme-presets.md');
     const chartSpec = readSkill('yida-skills/skills/yida-chart/references/echarts-design-spec.md');
+    const styleLibrary = readSkill('yida-skills/skills/yida-design/references/application-style-library.md');
+    const designOutput = readSkill('yida-skills/skills/yida-design/workflow/output-design.md');
+    const visualThemeSelection = readSkill('yida-skills/skills/yida-design/sub_skill/yida-design-plan/references/visual-theme-selection.md');
 
     expect(step4).toContain('PRD 只写应用主题色和风格摘要；`design.md` 写完整 `themeProfile`');
     expect(pageUiux).toContain('工作台、门户、列表、详情、普通看板和数据大屏默认都是浅底 / light 模式');
     expect(step4).toContain('视觉方向要从“高级 / 简洁 / 商务”继续落细');
     expect(step4).toContain('主色：先按行业、品牌、业务情绪和视觉目标做创意判断，可选择平台预置主题，也可设计自定义品牌色盘');
     expect(step4).toContain('界面明暗：默认浅色');
-    expect(step4).toContain('导航明暗：`themeProfile.navTheme` 单独按导航方案记录');
+    expect(step4).toContain('导航明暗：`themeProfile.navTheme` 从所选主题模板的 `navTheme` 派生');
+    expect(step4).toContain('按[主题明暗双轴]');
+    expect(step4).toContain('`contentTone` 默认 `light`');
+    expect(styleLibrary).toContain('## 主题明暗双轴');
+    expect(styleLibrary).toContain('深色导航可以搭配浅色内容，浅色导航也可以搭配暗色内容');
+    expect(styleLibrary).toContain('上传主题时使用项目实际生成的 CSS 路径，`app-theme.css` 与 `app_theme.css` 均可');
+    expect(styleLibrary).toContain('应用整体明暗以 `contentTone` 为准');
+    expect(styleLibrary).not.toMatch(/不能原样当成最终交付|不要把目录中的参考|不等同于暗黑主题/);
+    expect(designOutput).toContain('[主题明暗双轴](../references/application-style-library.md#主题明暗双轴)');
+    expect(designOutput).toContain('| `contentTone` | `light` 或 `dark` |');
+    expect(visualThemeSelection).toContain('[主题明暗双轴](../../../references/application-style-library.md#主题明暗双轴)');
+    expect(visualThemeSelection).toContain('自由创意的导航明暗由项目设计决定');
     const overlayGuide = readSkill('yida-skills/skills/yida-design/references/theme/theme-token-presets.md');
     expect(overlayGuide).toContain('`navTheme=dark` 只表示导航深色，不触发本节');
     expect(overlayGuide).toContain('允许在复制后的 `app-theme.css` 末尾追加精确 classname 规则');
@@ -1519,7 +1534,7 @@ describe('OpenYida skill contracts', () => {
     expect(outputBlock).toContain('| 应用主题色 | <平台预置 key 或自定义色盘名称；必须与 design.md 的 Theme Profile 一致> |');
     expect(outputBlock).toContain('| 主题交付 | <平台预置 / 应用自定义主题文件 / 继承当前应用；具体 themeProfile、token、主题文件交付策略见 design.md> |');
     expect(outputBlock).not.toContain('themeScope');
-    expect(visualEngine).toContain('默认 light，不默认暗黑');
+    expect(visualEngine).toContain('默认浅色内容画布');
     expect(pageUiux).toContain('工作台、门户、列表、详情、普通看板和数据大屏默认都是浅底 / light 模式');
     expect(pageUiux).toContain('只有用户明确说暗色/深色/夜间/高对比时才用深色沉浸');
     expect(dashboardTheme).toContain('白底商务风（DEFAULT）');
@@ -1592,7 +1607,7 @@ describe('OpenYida skill contracts', () => {
     expect(pageUiux).toContain('只能算 1 个状态摘要区块');
     expect(pageUiux).toContain('只能算 1 个动作区块');
     expect(qualityGates).toContain('## 1. 区块丰富度建议');
-    expect(qualityGates).toContain('## 2. 源码槽位门禁');
+    expect(qualityGates).toContain('## 2. 可实现页面门禁');
     expect(qualityGates).toContain('## 3. 低密大卡片门禁');
     expect(step3).toContain('推荐显式列出 8-10 个 `contentBlocks` 以上');
     expect(step3).toContain('KPI 组和快捷入口组各只算 1 个区块');
@@ -1603,13 +1618,13 @@ describe('OpenYida skill contracts', () => {
     expect(step4).toContain('内容区块：<推荐 8-10 个区块以上 + 目的');
     expect(step4).toContain('KPI 组只能算 1 个，快捷入口组只能算 1 个，列表组只能算 1 个');
     expect(step4).toContain('视觉上只有几个聚合区块');
-    expect(step5).toContain('4 个等宽大 KPI 卡 + 图标快捷卡 + 大空态白卡');
-    expect(step5).toContain('`contentBlocks` 推荐 8-10 个区块以上');
-    expect(step5).toContain('KPI 子项、快捷入口子项和列表行不能分别计数');
+    expect(qualityGates).toContain('标题下面直接铺 4 个等宽大 KPI 白卡');
+    expect(qualityGates).toContain('8-10 个有业务目的的 `contentBlocks`');
+    expect(qualityGates).toContain('计数按区块组算');
     expect(outputPrd).toContain('推荐逐条列出 8-10 个 `contentBlocks` 以上');
     expect(outputPrd).toContain('KPI 组、快捷入口组、列表组各只算 1 个区块');
     expect(pageGeneration).toContain('工作台通常包含状态摘要、高频动作、待办、动态和上下文信息');
-    expect(pageGeneration).toContain('工作台的状态摘要必须是 64-88px 圆润紧凑状态条');
+    expect(pageGeneration).toContain('工作台状态摘要按主题保持紧凑');
     expect(pageGeneration).toContain('`contentBlocks`');
     expect(pageGeneration).toContain('推荐 8-10 个有业务目的的区块');
     expect(pageGeneration).toContain('KPI 子项、快捷入口子项和列表行计入各自所属区块');
@@ -1617,11 +1632,17 @@ describe('OpenYida skill contracts', () => {
     expect(canvasStyleGuide).toContain('## 工作台卡片密度红线');
     expect(canvasStyleGuide).toContain('禁止使用“4 个等宽大 KPI 白卡 + 彩色图标盒 + 大数字 0”');
     expect(canvasStyleGuide).toContain('禁止用 160px 以上的大空态白卡');
-    expect(canvasStyleGuide).toContain('## 默认圆润高密与呼吸感落地');
-    expect(canvasStyleGuide).toContain('卡片 `border-radius` 范围 `0px-32px`');
+    expect(canvasStyleGuide).toContain('## 主题形状、密度与呼吸感落地');
+    expect(canvasStyleGuide).toContain('选中主题和页面明确决定优先');
     expect(canvasStyleGuide).toContain('页面布局必须有呼吸感');
-    expect(canvasStyleGuide).toContain('卡片和卡片的 gap 默认 `12px-18px` 且必须小于 `20px`');
-    expect(canvasStyleGuide).toContain('卡片 padding 默认 `22px-28px` 且必须大于 `20px`');
+    expect(canvasStyleGuide).toContain('下列数值仅在对应项未定义时兜底');
+    expect(canvasStyleGuide).not.toContain('且必须大于 `20px`');
+    expect(canvasStyleGuide).not.toContain('且必须小于 `20px`');
+    const canvasEntry = readSkill('yida-skills/skills/yida-canvas-custom-page/SKILL.md');
+    expect(canvasEntry).toContain('frontmatter 的 anchor 索引');
+    expect(canvasEntry).toContain('通用数值只在未定义时兜底');
+    expect(canvasEntry).not.toContain('卡片 padding >20px');
+    expect(canvasEntry).not.toContain('卡片 gap <20px');
     expect(canvasStyleGuide).toContain('页面整体推荐包含 8-10 个有业务目的的区块以上');
     expect(canvasStyleGuide).toContain('KPI 子项、快捷入口子项和列表行不能分别计数');
   });
@@ -1689,7 +1710,8 @@ describe('OpenYida skill contracts', () => {
     expect(formSkill).toContain('先用 Read 确认任务文件存在');
     expect(formSkill).toContain('保持当前执行单元，后续只接收该任务的最终结果');
     expect(formSkill).toContain('不要再调用 `create-form batch --help`、`create-form batch --check`');
-    expect(formSkill).toContain('执行普通批量创建无需再查 help、sample 或 CLI 源码');
+    expect(formSkill.match(/create-form batch --help/g)).toHaveLength(1);
+    expect(formSkill).not.toContain('试跑 batch 探测路径');
     expect(formSkill).toContain('确认 `projectRoot` → Write 一个任务文件 → Read 确认文件 → 唯一一次真实 batch');
     expect(formSkill).toContain('"formUuid": { "$form": "customer" }');
     expect(formSkill).toContain('`FORM_BATCH_PARTIAL_FAILURE` + `rerun_unchanged_plan`');
@@ -1717,7 +1739,8 @@ describe('OpenYida skill contracts', () => {
     expect(pageUiux).toContain('抽屉默认半屏 `50vw`');
     expect(pageUiux).toContain('新增/提交页 URL 默认使用页面级隐藏导航的 `submission/{formUuid}?isRenderNav=false`');
     expect(pageUiux).toContain('formDetail/{formUuid}?formInstId={formInstId}&navConfig.layout=1180&isRenderNav=false');
-    expect(canvas).toContain('表单打开入口统一容器');
+    expect(canvas).toContain('表单提交必须接入提供的抽屉模板');
+    expect(canvas).not.toContain('全码前台直接实现填写与结果并连接真实 API');
     expect(canvas).toContain('FormOpenContainer');
     expect(canvas).toContain('openyida sample openyida-page-template form-open-container');
     expect(canvas).toContain('references/navigation-and-entry-guide.md#接入示例');
@@ -1727,9 +1750,6 @@ describe('OpenYida skill contracts', () => {
     expect(navGuide).toContain('useYidaFormOpen(appType, reload)');
     expect(navGuide).toContain('window.__OPENYIDA_UTILS__');
     expect(navGuide).toContain('openyida sample openyida-page-template canvas-navigation');
-    expect(navGuide).not.toContain('installYidaGlobalThemeIntoFrame');
-    expect(navGuide).not.toContain('themeTokens');
-    expect(navGuide).not.toContain('onLoad={syncThemeToIframe}');
     expect(navGuide).toContain('`FormOpenContainer` 只负责打开原生提交页或详情页');
     expect(navGuide).toContain('`50vw`');
     expect(navGuide).toContain('退出全屏或关闭后重新打开保留已调整的宽度');
@@ -1740,7 +1760,8 @@ describe('OpenYida skill contracts', () => {
     expect(navGuide).toContain('有实例 ID 时启用详情按钮；缺少时禁用按钮，并提示“未找到数据实例”');
     expect(navGuide).toContain('&isRenderNav=false');
     expect(navGuide).toContain('FormOpenContainer');
-    expect(navGuide).toContain('按钮事件只调用 `openForm(request)`');
+    expect(navGuide).toContain('按钮事件调用 `openForm(request)`');
+    expect(navGuide).toContain('只有定义没有挂载，不算接入');
     expect(navGuide).not.toContain('runtime.openDrawer');
     expect(pageGeneration).toContain('| 表单新建/提交 | `targetType: "submission"` + `openMode: "responsive-drawer"` | PC 用 `FormOpenContainer` 右侧抽屉 iframe，URL 带 `isRenderNav=false` |');
     expect(pageGeneration).toContain('| 表单查看详情 | `targetType: "detail"` + 目标 `formUuid` + 真实 `formInstId` 来源 | PC 用同一套抽屉宽度，详情 URL 带 `navConfig.layout=1180&isRenderNav=false` |');
@@ -1754,8 +1775,6 @@ describe('OpenYida skill contracts', () => {
     expect(codingGuide).toContain("state.formOpenRequest.drawerWidth || '50vw'");
     expect(codingGuide).toContain('FormOpenContainer');
     expect(codingGuide).toContain('formOpenRequest');
-    expect(codingGuide).not.toContain('installYidaGlobalThemeIntoFrame');
-    expect(codingGuide).not.toContain('iframe 由主题运行时加载与应用一致的自定义主题 CSS');
     expect(codingGuide).toContain("'/submission/' + formUuid + '?isRenderNav=false'");
     expect(codingGuide).toContain("'/formDetail/' + formUuid");
     expect(codingGuide).toContain('&isRenderNav=false');
@@ -1845,7 +1864,8 @@ describe('OpenYida skill contracts', () => {
     expect(canvasStyleGuide).not.toContain('linear-gradient(135deg, #f7fbff 0%, #fff8f0 48%, #f4faf7 100%)');
     expect(canvasStyleGuide).toContain('当前自定义页面直接使用 `design.md` 中确定的主题变量');
     expect(canvasStyleGuide).toContain('## 视觉落地顺序');
-    expect(canvasStyleGuide).toContain('先读取 `prd/<项目名>/design.md`');
+    expect(canvasStyleGuide).toContain('先读取 PRD 与 design.md');
+    expect(canvasStyleGuide).toContain('查询 frontmatter 的 anchor 索引');
     expect(canvasStyleGuide).not.toContain('theme-runtime-helpers.md');
     expect(canvasStyleGuide).toContain('## 背景层实现规则');
     expect(canvasStyleGuide).toContain('OPENYIDA_BACKGROUND_LAYER_CSS');

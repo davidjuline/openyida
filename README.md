@@ -183,7 +183,7 @@ openyida get-schema APP_XXX FORM_XXX --compact --resolve-fields "Customer Name,S
 openyida get-schema APP_XXX --all --output-dir .cache/schemas
 ```
 
-Form definitions support 19 business field types plus verified presentation/layout components. Prefer `Divider` for section titles and `ColumnContainer` (mapped to `ColumnsLayout` + `Column`) for multi-column layout; use `GroupContainer` / `PageSection` only when an actual grouping container is needed.
+Native forms use a component tree: business fields capture data, tabs switch content, action groups trigger business actions, images establish visual focus, status areas provide feedback, and `Divider` plus `ColumnContainer` organize hierarchy and columns. `create-form` field definitions create 19 business field types plus `Divider` and `ColumnContainer` (mapped to `ColumnsLayout` + `Column`), while updates retain other existing components.
 
 ### Custom Page Development
 
@@ -393,14 +393,16 @@ Run `openyida --help` or `openyida <command> --help` for detailed usage.
 
 | Command | Description |
 |---------|-------------|
+| `openyida app-entry get <appType> [--json]` | Read frontend and management runtime entries |
+| `openyida app-entry set <appType> [--frontend <url>] [--management <url>] [--clear-frontend] [--clear-management] [--json]` | Register application entries with partial update and readback |
 | `openyida app-list [--type managed\|created] [--page N] [--size N]` | Page through apps I manage or created |
 | `openyida corp-efficiency [overview\|details\|detail\|groups\|notify] [options] [--open\|--no-open]` | Query enterprise efficiency overview and detail reports |
 | `openyida create-app "<name>"\|--name <name> [options] [--locale zh_CN\|en_US\|ja_JP] [--open\|--no-open]` | Create a Yida app |
 | `openyida design-plan catalog [--json]` | List available planning themes and page patterns |
 | `openyida design-plan init <requirement-brief.json> [--theme-id <id>] [--output-dir <dir>] [--json]` | Initialize a plan draft from confirmed requirements |
 | `openyida design-plan preview <build-plan.json> --part-file <module.json> [--json]` | Update plan drafts by module |
-| `openyida design-plan materialize <build-plan.json> [--from-preview \| --business-file <json> --visual-file <json>] [--output-dir <dir>] [--check] [--json]` | Generate and validate design-plan artifacts from build-plan.json |
-| `openyida design-plan patch <build-plan.json> --set <path=value> [--set <path=value> ...] [--materialize] [--output-dir <dir>] [--json]` | Patch a design plan; asset progress preserves existing approval |
+| `openyida design-plan materialize <build-plan.json> [--from-preview \| --business-file <json> --visual-file <json>] [--output-dir <dir>] [--rebase-parts] [--check] [--json]` | Generate or update plan documents and theme with consistency checks |
+| `openyida design-plan patch <build-plan.json> --set <path=value> [--set <path=value> ...] [--materialize] [--output-dir <dir>] [--json]` | Patch plan fields and optionally sync documents and theme |
 | `openyida update-app <appType> [--name "..."] [--desc "..."] [--icon <name>] [--icon-color <color>] [--colour <key>] [--theme-color <color>] [--theme-file <css>] [--nav-theme light\|dark\|white\|gray] [--logo-source appIcon\|customImage] [--layout side\|top\|l_shape] [--hide-app-nav\|--show-app-nav]` | Update app info |
 | `openyida app-online <appType> [--to-ding-app-center] [--show-app-center]` | Enable a Yida app |
 | `openyida app-offline <appType> [--to-ding-app-center] [--show-app-center]` | Disable a Yida app |
@@ -415,7 +417,7 @@ Run `openyida --help` or `openyida <command> --help` for detailed usage.
 | Command | Description |
 |---------|-------------|
 | `openyida create-form batch <appType> <plan.json> [--concurrency 1..4] [--check] [--json]` | Create forms concurrently by dependency |
-| `openyida create-form create <appType> "<formTitle>" <fieldsJsonFile> [--icon auto\|<iconName>] [--locale zh_CN\|en_US\|ja_JP] [--open\|--no-open]` | Create a form page |
+| `openyida create-form create <appType> "<formTitle>" <fieldsJsonFile> [--layout single\|double\|card\|section] [--theme default\|compact\|comfortable] [--label-align top\|left\|right] [--icon auto\|<iconName>] [--locale zh_CN\|en_US\|ja_JP] [--open\|--no-open]` | Create a form page |
 | `openyida create-form icons [--json]` | List available form navigation icons |
 | `openyida create-form validate-fields <fieldsJsonOrFile> [--json]` | Validate form field JSON locally |
 | `openyida create-form update <appType> <formUuid> (<changesJsonOrFile> \| --data-file <changesJsonOrFile>) [--locale zh_CN\|en_US\|ja_JP] [--open\|--no-open]` | Update a form page |
@@ -430,12 +432,13 @@ Run `openyida --help` or `openyida <command> --help` for detailed usage.
 | `openyida aggregate-table <list\|create-empty\|inspect\|preview\|save\|publish\|status> <appType> ...` | Manage aggregate tables (virtualView) |
 | `openyida get-schema <appType> <formUuid\|--all> [--summary-json\|--field-map-json\|--analysis-json]` | Get one form Schema or all form Schemas |
 | `openyida check-prd-completeness <prd.md> --app-type <appType> [--build-manifest <file>] [--json]` | Check PRD page/resource count risk |
+| `openyida check-design <design.md> [--prd <prd.md>] [--base-dir <dir>] [--json]` | Validate design documents, theme tokens and PRD handoff |
 | `openyida er <appType> [--format mermaid\|json] [--output file] [--include-system] [--include-pages]` | Export app entity relationship diagram |
 | `openyida create-page <appType> "<name>" [--mode dashboard] [--hide-nav] [--locale zh_CN\|en_US\|ja_JP] [--open\|--no-open]` | Create a custom display page |
 | `openyida build-page <sourceFile> [--output file\|--write]` | Build Yida-compatible page source |
-| `openyida check-page <src> [--compat]` | Check custom page standards |
-| `openyida compile <src> [--canvas] [--json]` | Compile custom page locally |
-| `openyida publish <src> <appType> <formUuid> [--health-check] [--force] [--canvas] [--auto-nav-order] [--open\|--no-open]` | Compile and publish custom page |
+| `openyida check-page <src> [--compat] [--json]` | Check custom page standards |
+| `openyida compile <src> [--canvas] [--compat] [--skip-lint] [--json]` | Compile custom page locally |
+| `openyida publish <src> <appType> <formUuid> [--health-check] [--force] [--canvas] [--compat] [--skip-lint] [--auto-nav-order] [--open\|--no-open] [--json]` | Compile and publish custom page |
 | `openyida update-form-config <appType> <formUuid> <true\|false\|keep> "<title>" [--locale zh_CN\|en_US\|ja_JP]` | Update form configuration |
 | `openyida get-form-config <appType> <formUuid> [--json]` | Query form configuration |
 
@@ -458,7 +461,7 @@ Run `openyida --help` or `openyida <command> --help` for detailed usage.
 | Command | Description |
 |---------|-------------|
 | `openyida configure-process <appType> <formUuid> <definition> [processCode] [--replace]` | Configure and publish process rules; Supports append/forward via JSON nodes[].actions.normalActions/appendActions |
-| `openyida create-process <appType> ... [--replace]` | Create process form (all-in-one); Supports append/forward via JSON nodes[].actions.normalActions/appendActions |
+| `openyida create-process <appType> <formTitle> <fieldsJsonFile> <processDefinitionFile> [--replace] \| create-process <appType> --formUuid <formUuid> <processDefinitionFile> [--replace]` | Create process form (all-in-one); Supports append/forward via JSON nodes[].actions.normalActions/appendActions |
 | `openyida ai-form-setting <get\|fields\|models\|enable\|disable\|save> <appType> ...` | Manage process form AI approval prompts |
 | `openyida process preview <appType> ...` | Preview process instance (visual flowchart) |
 
@@ -522,7 +525,7 @@ Run `openyida --help` or `openyida <command> --help` for detailed usage.
 | `openyida a2a <serve\|agent-card> [options]` | Start local read-only A2A adapter or print Agent Card |
 | `openyida bridge start [--token <pair-token>] [--port 6736] [--origin https://demo.aliwork.com] [--open\|--no-open]` | Start OpenYida local web bridge service |
 | `openyida copy [--force]` | Copy project working directory |
-| `openyida sample [--list] [<skill> <name>] [--output <file>] [--var KEY=VALUE ...] [--design-file <design.md>]` | Output code samples/templates |
+| `openyida sample [--list] [<skill> <name>] [--output <file-or-directory>] [--var KEY=VALUE ...] [--design-file <design.md>] [--style-id <themeId\|free-creative>]` | Output code samples/templates |
 | `openyida doctor [--fix]` | Environment diagnostics & auto-fix |
 | `openyida db-seq-fix [--fix]` | Detect and repair PostgreSQL sequence drift |
 | `openyida formula evaluate <formula\|file> [--schema file]` | Static-check Yida formula syntax and field refs |
