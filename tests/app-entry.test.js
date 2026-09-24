@@ -9,6 +9,8 @@ jest.mock('../lib/core/yida-client', () => ({
   }),
 }));
 const { createAuthRef, createYidaClient } = require('../lib/core/yida-client');
+jest.mock('../lib/app/form-navigation', () => ({ fetchFormPageList: jest.fn() }));
+const { fetchFormPageList } = require('../lib/app/form-navigation');
 const { run, parseArgs, normalizeUrl } = require('../lib/app/app-entry');
 const origin = 'https://tenant.example.com';
 const response = (accessEntries, revision = 'v1') => ({ success: true, content: { accessEntries, revision } });
@@ -47,6 +49,8 @@ test.each([
   ['set', 'APP'], ['get', '../APP'], ['set', 'APP', '--frontend'],
   ['set', 'APP', '--frontend', '--management'], ['get', 'APP', '--clear-frontend'],
   ['set', 'APP', '--frontend', '/APP/custom/F', '--clear-frontend'],
+  ['set', 'APP', '--frontend', 'x', '--frontend-page', 'FORM-A'],
+  ['set', 'APP', '--clear-frontend-page'], ['set', 'APP', '--management-page'],
 ])('rejects ambiguous arguments %j', (...args) => expect(() => parseArgs(args)).toThrow());
 test('help does not require authentication', async () => {
   await run(['--help']);
@@ -136,5 +140,55 @@ test('keeps the verified enterprise URL even when the API authentication host di
 test('rejects relative input before any request', async () => {
   await expect(run(['set', 'APP', '--frontend', '/APP/custom/FORM'])).rejects.toThrow();
   expect(client.get).not.toHaveBeenCalled();
+  expect(client.postForm).not.toHaveBeenCalled();
+});
+
+test.each([
+  `${origin}/APP/workbench/FORM-XYZ`,
+  `${origin}/APP/workbench/FORM?corpid=ding123#tab`,
+  `${origin}/APP/workbench`,
+  `${origin}/APP/manage/FORM`,
+])('preserves the exact management URL through write and readback: %s', url => {
+  const entries = { management: { url } };
+  client.get.mockResolvedValueOnce(response({})).mockResolvedValueOnce(response(entries, 'v2'));
+  return run(['set', 'APP', '--management', url]).then(() => {
+    expect(JSON.parse(client.postForm.mock.calls[0][1].accessEntries)).toEqual(entries);
+    expect(fetchFormPageList).not.toHaveBeenCalled();
+  });
+});
+
+test('--frontend-page builds the canonical custom URL for an online page', async () => {
+  fetchFormPageList.mockResolvedValue([{ formUuid: 'FORM-A', pathName: 'store', formType: 'display' }]);
+  const entries = { frontend: { url: `${origin}/APP/custom/FORM-A` } };
+  client.get.mockResolvedValueOnce(response({})).mockResolvedValueOnce(response(entries, 'v2'));
+  await run(['set', 'APP', '--frontend-page', 'FORM-A']);
+  expect(fetchFormPageList).toHaveBeenCalledWith('APP', expect.any(Object));
+  expect(JSON.parse(client.postForm.mock.calls[0][1].accessEntries)).toEqual(entries);
+});
+
+test('--frontend-page refuses an offline page before any write', async () => {
+  fetchFormPageList.mockResolvedValue([{ formUuid: 'FORM-A', pathName: '', formType: 'display' }]);
+  await expect(run(['set', 'APP', '--frontend-page', 'FORM-A'])).rejects.toThrow();
+  expect(client.get).not.toHaveBeenCalled();
+  expect(client.postForm).not.toHaveBeenCalled();
+});
+
+test('--frontend-page rejects a page from another application', async () => {
+  fetchFormPageList.mockResolvedValue([{ formUuid: 'FORM-OTHER', pathName: 'x' }]);
+  await expect(run(['set', 'APP', '--frontend-page', 'FORM-A'])).rejects.toThrow();
+  expect(client.postForm).not.toHaveBeenCalled();
+});
+
+test('--management-page keeps the requested workbench page after verifying ownership', async () => {
+  fetchFormPageList.mockResolvedValue([{ formUuid: 'FORM-A', pathName: '', formType: 'receipt' }]);
+  const entries = { management: { url: `${origin}/APP/workbench/FORM-A` } };
+  client.get.mockResolvedValueOnce(response({})).mockResolvedValueOnce(response(entries, 'v2'));
+  await run(['set', 'APP', '--management-page', 'FORM-A']);
+  expect(JSON.parse(client.postForm.mock.calls[0][1].accessEntries)).toEqual(entries);
+});
+
+test.each(['receipt', 'process', ''])('--frontend-page refuses non-display type %s before writing', async formType => {
+  fetchFormPageList.mockResolvedValue([{ formUuid: 'FORM-A', pathName: 'online', formType }]);
+  await expect(run(['set', 'APP', '--frontend-page', 'FORM-A'])).rejects.toThrow();
   expect(client.postForm).not.toHaveBeenCalled();
 });

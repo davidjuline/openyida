@@ -94,3 +94,53 @@ test('CLI accepts rebase-parts and delivers confirmation for the reconciled draf
     log.mockRestore();
   }
 });
+
+test('CLI repair diagnostics point to the editable fragment and detect unchanged attempts', async () => {
+  business.facts.pages.customPageDetails[0].permissionSummary = '';
+  write(businessFile, business);
+  const args = ['materialize', input, '--business-file', businessFile, '--visual-file', visualFile, '--json'];
+  const attempt = async () => {
+    try { await require('../lib/design-plan/design-plan').run(args); }
+    catch (error) { return error.details; }
+    throw new Error('Expected invalid authoring');
+  };
+  const first = await attempt();
+  expect(first.issues).toEqual(expect.arrayContaining([expect.objectContaining({
+    sourcePath: businessFile, path: 'facts.pages.customPageDetails[0].permissionSummary',
+  })]));
+  const unchanged = await attempt();
+  expect(unchanged.repair).toEqual(first.repair);
+  business.facts.overview.summary = '修正后的业务概要'; write(businessFile, business);
+  const changed = await attempt();
+  expect(changed.repair.inputHash).not.toBe(first.repair.inputHash);
+  expect(changed.repair.errorHash).toBe(first.repair.errorHash);
+  expect(changed.repair.unchangedRetryAllowed).toBe(false);
+  expect(changed.repair.maxAttemptsWithoutProgress).toBe(2);
+});
+
+test('CLI repair fingerprints include preview facts without changing the main plan', async () => {
+  const stateFile = path.join(dir, 'preview/.state.json');
+  fs.mkdirSync(path.dirname(stateFile));
+  const state = { base: planBase(base), facts: { overview: { ...base.overview } } };
+  write(stateFile, state);
+  const attempt = async () => {
+    try { await require('../lib/design-plan/design-plan').run(['materialize', input, '--from-preview', '--json']); }
+    catch (error) { return error.details.repair; }
+    throw new Error('Expected incomplete preview');
+  };
+  const first = await attempt();
+  expect(await attempt()).toEqual(first);
+  state.facts.overview.summary = '已修正的预览概要';
+  write(stateFile, state);
+  const changed = await attempt();
+  expect(changed.inputHash).not.toBe(first.inputHash);
+  expect(changed.errorHash).toBe(first.errorHash);
+  expect(read(input)).toEqual(base);
+  state.facts = { ...business.facts, ...visual.facts };
+  state.facts.pages.customPageDetails[0].permissionSummary = '';
+  write(stateFile, state);
+  await expect(require('../lib/design-plan/design-plan').run(['materialize', input, '--from-preview', '--json']))
+    .rejects.toMatchObject({ details: { issues: expect.arrayContaining([expect.objectContaining({
+      sourcePath: stateFile, path: 'facts.pages.customPageDetails[0].permissionSummary',
+    })]) } });
+});

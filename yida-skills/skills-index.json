@@ -69,7 +69,7 @@
       "name": "yida-design",
       "path": "skills/yida-design/SKILL.md",
       "display_name": "宜搭应用设计",
-      "description": "读取整理后的用户需求，输出 prd/<项目名>/design.md；也用于单页 UI 改造、主页面视觉设计、应用主题色或全局换肤。PRD 由 yida-prd 同时生成。本技能不写 PRD 或页面源码。",
+      "description": "设计应用外观、美化页面、调整主题色，或解决导航与页面风格不一致时使用。读取整理后的用户需求，创建或更新 prd/<项目名>/design.md，让导航、表单、详情和自定义页面使用同一套主题。本技能不写 PRD 或页面源码。",
       "category": "yida-skills/design",
       "tags": [
         "应用设计",
@@ -1012,7 +1012,7 @@
       "name": "yida-nav-shell",
       "path": "skills/yida-nav-shell/SKILL.md",
       "display_name": "页面内导航壳",
-      "description": "为应用或独立前台页面制作自己的导航菜单时使用。只做前台菜单时，保留管理端的宜搭导航；整个应用都使用自定义菜单时，再隐藏应用导航。",
+      "description": "为应用或独立前台页面编写自己的顶部、侧边等导航菜单时使用。只改现有导航颜色和样式用 yida-design，整理菜单分组和顺序用 yida-nav-group。只做前台菜单时保留管理端的宜搭导航；整个应用都使用自定义菜单时，才隐藏应用导航。",
       "category": "yida-skills/page",
       "tags": [
         "页面内导航",

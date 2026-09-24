@@ -1306,5 +1306,7 @@ main()
     } else {
       warn(t('cli.exec_failed', err.message));
     }
-    process.exit(err && err.exitCode ? err.exitCode : 1);
+    // Let pending stdout/stderr writes drain, especially large JSON diagnostics
+    // sent through pipes on macOS/Linux. process.exit() can truncate them.
+    process.exitCode = err && err.exitCode ? err.exitCode : 1;
   });

@@ -218,3 +218,5 @@ description: >
 | [报表字段配置](references/report-field-config-guide.md) | 报表字段配置规范 | 配置报表时 |
 | [版本功能差异](references/edition-features-guide.md) | 各版本能力差异 | 版本能力查询时 |
 | [模型 API](references/model-api.md) | 宜搭模型接口 | 调用宜搭模型能力时 |
+
+本地设计与 Canvas 编译校验失败时读取[本地校验修复](references/source-repair.md)，按字段修复并限制无进展重试。

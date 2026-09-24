@@ -12,57 +12,17 @@ tokens:
         "--pod-card-bg-color": "#ffffff"
         "--pod-table-cell-color": "var(--pod-card-bg-color)"
       navigation:
+        "--pod-nav-sub-divider-color": "#CCCCCC"
         "--pod-shell-theme-bg-color": "#FFFFFF"
         "--pod-nav-item-text-color": "#404040"
         "--pod-nav-item-text-hover-color": "#171717"
         "--pod-nav-item-text-selected-color": "#FFFFFF"
         "--pod-nav-menu-bg-hover-color": "#F0F0F0"
         "--pod-nav-menu-bg-selected-color": "#303030"
-        "--pod-nav-menu-item-selected-shadow": "none"
-        "--pod-page-header-bg-color": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-l-sub-main-bg-color": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-top-main-border-width": "1px"
-        "--pod-nav-top-main-border-color": "#CCCCCC"
-        "--pod-nav-top-tab-indicator-width": "0px"
-        "--pod-nav-logo-text": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-logo-bg": "var(--pod-nav-menu-bg-selected-color)"
-        "--pod-nav-logo-icon": "var(--pod-nav-item-text-selected-color)"
-        "--pod-nav-logo-border": "1px solid #CCCCCC"
-        "--pod-nav-logo-border-radius": "4px"
-        "--pod-nav-sub-divider-color": "#CCCCCC"
-        "--pod-nav-item-text-disabled-color": "rgba(24,28,31,.30)"
-        "--pod-nav-l-container-bg": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-l-group-label-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-l-search-border-color": "#CCCCCC"
-        "--pod-nav-popup-bg-color": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-popup-border-radius": "4px"
-        "--pod-nav-popup-shadow": "none"
-        "--pod-nav-tab-line-hover-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-tab-line-selected-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-search-bg-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-search-bg-hover-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-search-bg-active-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-search-placeholder-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-search-text-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-search-icon-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-search-border-color": "#CCCCCC"
-        "--pod-nav-search-border-hover-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-search-border-active-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-action-icon-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-action-border-color": "#CCCCCC"
-        "--pod-nav-action-border": "1px solid #CCCCCC"
-        "--pod-nav-action-bg-hover-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-action-bg-active-color": "var(--pod-nav-menu-bg-hover-color)"
         "--pod-nav-menu-item-height": "40px"
         "--pod-nav-menu-item-radius": "4px"
-        "--pod-nav-menu-item-border": "none"
-        "--pod-nav-menu-item-hover-border": "none"
-        "--pod-nav-menu-item-selected-border": "none"
-        "--pod-nav-menu-font-size": "14px"
         "--pod-nav-menu-item-selected-font-weight": "500"
-        "--pod-nav-menu-line-height": "20px"
-        "--pod-nav-menu-gap": "8px"
-        "--pod-shell-lshape-border-radius": "4px"
+        "--pod-nav-popup-bg-color": "var(--pod-shell-theme-bg-color)"
       native-form:
         "--form-element-medium-corner": "4px"
         "--form-element-medium-height": "36px"
@@ -187,6 +147,8 @@ applicationStyle:
 
 自由创意从业务任务、用户、品牌、内容结构和使用环境独立推演。导航、应用框架、自定义页面、表单和详情页共用最终确定的构图、字体、材质、密度与状态语言。
 
+导航外观属于这份完整应用主题，颜色、三态边框、圆角、阴影与表单、详情和自定义页面一起设计。业务决定入口组织、操作频率与交互需求；主题决定这些需求的视觉表达。主色只是颜色角色之一，辅助色和材质色可以独立存在；仅显式 var 引用建立联动，不按主色批量染色。所有视觉 Token 在同一份 design.md 维护，不另选导航风格包。
+
 ## 2. 页面视觉系统
 
 ### 2.1 表面、区块与层次
@@ -197,7 +159,9 @@ applicationStyle:
 
 按业务入口确定导航结构和明暗，菜单来自真实页面范围。主色 {{PRIMARY_COLOR}}；色彩来源 {{COLOR_SOURCE}}。导航与正文使用同一应用全局样式；在 themeProfile 中分别填写 contentTone 与 navTheme。
 
-先决定品牌区、菜单分组、搜索和常用操作如何服务当前业务，再与应用框架、表单、自定义页和详情一起确定表面、边界、圆角、字体、密度和选中表达。在 navigation 分组填写项目自己的导航底色、普通文字、悬停文字、选中文字、悬停背景、选中背景六项 Token，并配套搜索、弹层、分组、操作、菜单高度与圆角。文件中的基础值是编写骨架，交付时用项目设计值替换。窄屏和折叠后保持菜单可展开、当前页面可定位、键盘焦点可见。
+普通导航按连续目录组织，不给每个入口叠加独立边框、卡片底和投影；hover 轻反馈，当前项适度强调。border、box-shadow 等仅在项目设计确有用途时覆盖，省略时沿用平台表现。全局品牌色阶 `--color-brand1-1`、`--color-brand1-2`、`--color-brand1-3`、`--color-brand1-5`、`--color-brand1-6`、`--color-brand1-9`、`--color-brand1-10` 则必须完整提供，不能随可选导航样式一起省略。
+
+先决定品牌区、菜单分组、搜索和常用操作如何服务当前业务，再与应用框架、表单、自定义页和详情一起确定表面、边界、圆角、字体、密度和选中表达。在 navigation 分组只填写相对平台默认关系有设计差异的 Token，不要求凑齐六项颜色或逐项定义搜索、Logo、分组和操作状态；需要特殊菜单形状、密度或弹层表面时再覆盖对应变量。文件中的基础值是编写骨架，交付时用项目设计值替换。窄屏和折叠后保持菜单可展开、当前页面可定位、键盘焦点可见。
 
 ### 2.3 页面标题与操作
 

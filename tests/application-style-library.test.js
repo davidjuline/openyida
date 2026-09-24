@@ -61,8 +61,6 @@ test('theme catalog separates content tone from navigation tone', () => {
   });
   expect(themeIndex.find(theme => theme.themeId === 'free-creative')).not.toHaveProperty('contentTone');
   expect(themeIndex.find(theme => theme.themeId === 'free-creative')).not.toHaveProperty('navTheme');
-  const sourceProfiles = require('../yida-skills/skills/yida-design/templates/application-styles.json');
-  expect(sourceProfiles.every(profile => !Object.prototype.hasOwnProperty.call(profile, 'dark'))).toBe(true);
 
   applicationStyles.filter(theme => theme.mode === 'template').forEach(theme => {
     const design = fs.readFileSync(path.join(DESIGN_SKILL_ROOT, theme.templatePath), 'utf8');
@@ -80,8 +78,6 @@ test('every named theme has its own complete platform navigation design and read
   const platformCss = fs.readFileSync(path.join(DESIGN_SKILL_ROOT, 'references/theme/app-custom-theme-template.css'), 'utf8');
   const supported = new Set([...platformCss.matchAll(/(--[\w-]+)\s*:/g)].map(match => match[1]));
   const palettes = new Set();
-  const radii = new Set();
-  const heights = new Set();
   themeIndex.filter(theme => theme.mode !== 'creative').forEach(theme => {
     const source = fs.readFileSync(path.join(DESIGN_SKILL_ROOT, theme.templatePath), 'utf8');
     const navigation = parseDesignDocument(source).metadata.tokens['application-global'].appearance.navigation;
@@ -90,19 +86,31 @@ test('every named theme has its own complete platform navigation design and read
     expect(source).toContain('导航与应用框架、表单、自定义页面和详情页共用设计语言');
     expect(source).not.toContain('原生导航仅配置上述开放颜色');
     Object.keys(navigation).forEach(token => expect(supported.has(token)).toBe(true));
-    expect(Object.keys(navigation).length).toBeGreaterThanOrEqual(40);
-    NAVIGATION_COLOR_TOKENS.forEach(token => expect(navigation[token]).toEqual(expect.any(String)));
+    expect(navigation).not.toHaveProperty('--pod-nav-search-text-color');
+    expect(navigation).not.toHaveProperty('--pod-nav-search-border-active-color');
+    expect(navigation).not.toHaveProperty('--pod-page-header-bg-color');
+    // Expanded hierarchy lines are an intentional per-theme design choice.
+    expect(navigation['--pod-nav-sub-divider-color']).toEqual(expect.any(String));
+    const css = fs.readFileSync(path.join(DESIGN_SKILL_ROOT, theme.cssTemplatePath), 'utf8');
+    expect(css).toContain(`--pod-nav-sub-divider-color: ${navigation['--pod-nav-sub-divider-color']};`);
+    NAVIGATION_COLOR_TOKENS.forEach(token => expect(css).toContain(`${token}:`));
     palettes.add(NAVIGATION_COLOR_TOKENS.map(token => navigation[token]).join('|'));
-    radii.add(navigation['--pod-nav-menu-item-radius']);
-    heights.add(navigation['--pod-nav-menu-item-height']);
+    // Stock menus remain scannable; project overrides may still use larger shapes.
+    expect(parseInt(navigation['--pod-nav-menu-item-height'] || '36', 10)).toBeLessThanOrEqual(40);
+    navigation['--pod-nav-menu-item-radius'].split(' ').forEach(value => expect(parseInt(value, 10)).toBeLessThanOrEqual(8));
+    const shadow = navigation['--pod-nav-menu-item-selected-shadow'] || 'none';
+    expect(shadow === 'none' || /^inset [1-3]px 0 0 /.test(shadow)).toBe(true);
+    expect(navigation).not.toHaveProperty('--pod-nav-menu-item-border');
+    for (const state of ['hover', 'selected']) {
+      expect(navigation).not.toHaveProperty(`--pod-nav-menu-item-${state}-border`);
+    }
+    expect(css).not.toMatch(/^\s*border: var\(--pod-nav-menu-item-/m);
+    expect(css).not.toContain('height: 100% !important;');
+    if (!navigation['--pod-nav-menu-item-selected-shadow']) {expect(css).not.toContain('openyida-navigation-shape:start');}
     // Navigation overlays have their own surface, including dark-nav/light-content themes.
     expect(navigation['--pod-nav-popup-bg-color']).toBe('var(--pod-shell-theme-bg-color)');
-    expect(navigation['--pod-nav-search-text-color']).toBe('var(--pod-nav-item-text-hover-color)');
-    expect(navigation['--pod-nav-logo-icon']).toBe('var(--pod-nav-item-text-selected-color)');
   });
   expect(palettes.size).toBe(33);
-  expect(radii.size).toBeGreaterThanOrEqual(8);
-  expect(heights.size).toBeGreaterThanOrEqual(6);
 });
 
 test('application preset navigation text is readable in ordinary, hover and selected states', () => {

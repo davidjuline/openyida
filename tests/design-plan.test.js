@@ -617,7 +617,7 @@ describe('design-plan materialize', () => {
     const { readDesignTokens } = require('../lib/app/theme-from-design');
     const plan = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
     plan.visualStyle.forUser.selectedTheme = { themeId, templatePath: `templates/design-themes/${themeId}/design.md` };
-    plan.visualStyle.tokens = { '--oyd-on-action-color': '#241B18', '--pod-card-bg-color': '#FFF7F2' };
+    plan.visualStyle.tokens = { '--oyd-on-action-color': '#241B18', '--pod-card-bg-color': themeId === 'graphite-bevel-grid' ? '#24211F' : '#FFF7F2' };
     const design = renderDesign(plan);
     const shared = fs.readFileSync(path.join(ROOT, 'yida-skills/skills/yida-design/references/application-theme-consistency.md'), 'utf8');
     const pairing = shared.split('## 指标卡与按钮配色\n')[1].split('\n## ')[0].trim();
@@ -643,7 +643,8 @@ describe('design-plan materialize', () => {
     expect(section).toContain(`导航明暗：${tone === 'dark' ? '深色' : '浅色'}`);
     expect(section).not.toMatch(/模板默认|默认近白|生成项目时|项目生成时/);
     expect(design.match(/本项目导航与应用框架/g)).toHaveLength(1);
-    expect(section).toContain('| 选中项阴影 | --pod-nav-menu-item-selected-shadow | none |');
+    expect(section).not.toContain('| 选中项阴影 |');
+    expect(section).toContain('未声明项沿用平台绑定与默认值');
     expect(validateDesignDocument(design).success).toBe(true);
   });
 
@@ -850,7 +851,7 @@ describe('design-plan materialize', () => {
     expect(green['--color-line1-2']).toBe('#E8E8E8');
     expect(green['--color-text1-4']).toBe('#303030');
     expect(green['--color-text1-10']).toBe('#606060');
-    expect(green['--color-text1-3']).toBe('#767676');
+    expect(green['--color-text1-3']).toBe('#666666');
     expect(applyDesignTokens(template, design)).toContain('--pod-shell-theme-bg-color: #F7F7F7;');
     expect(applyDesignTokens(template, design)).toContain('--pod-page-bg-color: #FAFAFA;');
     plan.visualStyle.forUser.colorStrategy.primaryColor = '#6F4E37';
@@ -893,7 +894,7 @@ describe('design-plan materialize', () => {
   test.each([
     ['soft-inset-surfaces', 'light', 'dark'],
     ['dark-inset-hairline', 'dark', 'light'],
-  ])('selected %s theme derives %s navigation and keeps other modes at defaults', (themeId, tone, staleTone) => {
+  ])('selected %s theme derives %s navigation and shares its palette across platform modes', (themeId, tone, staleTone) => {
     const plan = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
     plan.visualStyle.forUser.selectedTheme = { themeId, templatePath: `templates/design-themes/${themeId}/design.md` };
     plan.visualStyle.forUser.navigationStyle.tone = staleTone;
@@ -903,24 +904,28 @@ describe('design-plan materialize', () => {
     const design = renderDesign(plan);
     const css = applyDesignTokens(template, design);
     const tokens = readDesignTokens(design);
-    const scope = (stylesheet, mode) => stylesheet.match(new RegExp(`\\.pod-premium\\.nav-${mode}\\s*\\{([^}]+)\\}`))[1];
+    const { topLevelRules } = require('../lib/app/theme-scope');
+    const { parseDesignDocument } = require('../lib/design/document');
+    expect(parseDesignDocument(design).metadata.themeProfile.navTheme).toBe(tone);
+    const scope = (stylesheet, mode) => {
+      const rules = topLevelRules(stylesheet).filter(rule => rule.selector.split(',').map(x => x.trim()).includes(`.pod-premium.nav-${mode}`));
+      expect(rules).toHaveLength(1);
+      return rules[0].body;
+    };
     for (const mode of ['light', 'dark', 'white', 'gray']) {
-      const background = mode === tone ? tokens['--pod-shell-theme-bg-color']
-        : scope(template, mode).match(/--pod-shell-theme-bg-color:\s*([^;]+);/)[1];
-      const scoped = scope(css, mode);
-      expect(scoped).toContain(`--pod-shell-theme-bg-color: ${background};`);
-      const headerBackground = mode === tone ? (tokens['--pod-page-header-bg-color'] || background)
-        : scope(template, mode).match(/--pod-page-header-bg-color:\s*([^;]+);/)[1];
-      expect(scoped).toContain(`--pod-page-header-bg-color: ${headerBackground};`);
+      expect(scope(css, mode)).toContain(`--pod-shell-theme-bg-color: ${tokens['--pod-shell-theme-bg-color']};`);
+      expect(scope(css, mode)).toContain(`--pod-page-header-bg-color: ${tokens['--pod-page-header-bg-color'] || template.match(/--pod-page-header-bg-color:\s*([^;]+);/)[1]};`);
+      expect(scope(css, mode)).toBe(scope(css, tone));
     }
-    // Changing the primary color updates the selected theme palette and keeps other modes.
+    // A primary-color edit updates the same palette at every platform entry.
     plan.visualStyle.forUser.colorStrategy.primaryColor = '#1677FF';
     const nextDesign = renderDesign(plan);
     const changed = applyDesignTokens(css + '\n.local-detail { padding: 7px; }\n', nextDesign, design);
     expect(changed).toContain('--color-brand1-6: #1677FF;');
     expect(scope(changed, tone)).toContain(`--pod-shell-theme-bg-color: ${readDesignTokens(nextDesign)['--pod-shell-theme-bg-color']};`);
-    for (const mode of ['light', 'dark', 'white', 'gray'].filter(mode => mode !== tone)) {
-      expect(scope(changed, mode)).toBe(scope(css, mode));
+    for (const mode of ['light', 'dark', 'white', 'gray']) {
+      expect(scope(changed, mode)).toBe(scope(changed, tone));
+      expect(scope(changed, mode)).toContain('--color-brand1-6: #1677FF;');
     }
     expect(changed).toContain('.local-detail { padding: 7px; }');
     expect(applyDesignTokens(changed, renderDesign(plan), renderDesign(plan))).toBe(changed);

@@ -13,57 +13,43 @@ tokens:
         "--pod-card-bg-color": "var(--color-brand1-5)" # 稍亮于画布的主题深色表面；不关联品牌禁用状态
         "--pod-table-cell-color": "var(--pod-card-bg-color)" # 表格正文单元格背景；跟随卡片背景
       navigation:
+        "--pod-nav-sub-divider-color": "#353535"
         "--pod-shell-theme-bg-color": "#000000"
         "--pod-nav-item-text-color": "var(--color-brand1-2)"
         "--pod-nav-item-text-hover-color": "var(--color-brand1-3)"
-        "--pod-nav-item-text-selected-color": "#111111"
+        "--pod-nav-item-text-selected-color": "var(--color-text1-4)"
         "--pod-nav-menu-bg-hover-color": "var(--color-brand1-5)"
-        "--pod-nav-menu-bg-selected-color": "var(--color-brand1-6)"
-        "--pod-nav-menu-item-selected-shadow": "none"
-        "--pod-page-header-bg-color": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-l-sub-main-bg-color": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-top-main-border-width": "1px"
-        "--pod-nav-top-main-border-color": "#353535"
-        "--pod-nav-top-tab-indicator-width": "0px"
-        "--pod-nav-logo-text": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-logo-bg": "var(--pod-nav-menu-bg-selected-color)"
-        "--pod-nav-logo-icon": "var(--pod-nav-item-text-selected-color)"
-        "--pod-nav-logo-border": "1px solid #353535"
-        "--pod-nav-logo-border-radius": "8px"
-        "--pod-nav-sub-divider-color": "#353535"
-        "--pod-nav-item-text-disabled-color": "rgba(255,255,255,.30)"
-        "--pod-nav-l-container-bg": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-l-group-label-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-l-search-border-color": "#353535"
-        "--pod-nav-popup-bg-color": "var(--pod-shell-theme-bg-color)"
-        "--pod-nav-popup-border-radius": "8px"
-        "--pod-nav-popup-shadow": "0 8px 24px rgba(0,0,0,.24)"
-        "--pod-nav-tab-line-hover-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-tab-line-selected-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-search-bg-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-search-bg-hover-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-search-bg-active-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-search-placeholder-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-search-text-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-search-icon-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-search-border-color": "#353535"
-        "--pod-nav-search-border-hover-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-search-border-active-color": "var(--pod-nav-item-text-hover-color)"
-        "--pod-nav-action-icon-color": "var(--pod-nav-item-text-color)"
-        "--pod-nav-action-border-color": "#353535"
-        "--pod-nav-action-border": "1px solid #353535"
-        "--pod-nav-action-bg-hover-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-action-bg-active-color": "var(--pod-nav-menu-bg-hover-color)"
-        "--pod-nav-menu-item-height": "42px"
-        "--pod-nav-menu-item-radius": "999px"
-        "--pod-nav-menu-item-border": "1px solid transparent"
-        "--pod-nav-menu-item-hover-border": "1px solid var(--color-brand1-6)"
-        "--pod-nav-menu-item-selected-border": "1px solid var(--color-brand1-6)"
-        "--pod-nav-menu-font-size": "14px"
+        "--pod-nav-menu-bg-selected-color": "#252525"
+        "--pod-nav-menu-item-height": "40px"
+        "--pod-nav-menu-item-radius": "8px"
         "--pod-nav-menu-item-selected-font-weight": "500"
-        "--pod-nav-menu-line-height": "20px"
-        "--pod-nav-menu-gap": "8px"
-        "--pod-shell-lshape-border-radius": "8px"
+        "--pod-nav-popup-bg-color": "var(--pod-shell-theme-bg-color)"
+      native-form:
+        "--form-element-medium-corner": "var(--corner-2)"
+        "--form-element-medium-height": "var(--s-8)"
+        "--form-element-medium-font-size": "var(--font-size-body-1)"
+        "--input-bg-color": "var(--color-fill1-1)"
+        "--input-border-width": "1px"
+        "--input-border-color": "var(--color-line1-2)"
+        "--input-hover-border-color": "var(--color-brand1-6)"
+        "--input-focus-border-color": "var(--color-brand1-6)"
+        "--input-hover-bg-color": "var(--input-bg-color)"
+        "--input-focus-bg-color": "var(--input-bg-color)"
+        "--pod-form-label-color": "var(--color-text1-4)"
+        "--form-top-label-margin-b": "var(--s-2)"
+        "--yida-form-content-bgcolor": "var(--pod-page-bg-color)"
+        "--pod-page-footer-bg-color": "var(--pod-card-bg-color)"
+        "--pod-page-footer-border-radius": "var(--corner-5)"
+        "--pod-sticky-footer-box-shadow": "none"
+        "--pod-field-preview-min-height": "var(--form-element-medium-height)"
+        "--pod-field-preview-padding": "0 8px"
+        "--pod-field-preview-gap": "var(--s-1)"
+        "--pod-field-preview-bg-color": "var(--color-fill1-1)"
+        "--pod-field-preview-border-radius": "var(--corner-2)"
+        "--pod-field-preview-indicator-color": "var(--color-fill1-3)"
+        "--pod-field-preview-shadow": "none"
+        "--pod-field-preview-text-color": "var(--color-text1-4)"
+        "--pod-field-preview-line-height": "20px"
     colors: # 品牌色、内容区语义色与固定色；不随导航深浅切换
       "--color-white": "var(--pod-card-bg-color)" # 全应用基础表面，随主题暗面；不用于白字或亮色按钮背景
       "--color-brand1-1": "<生成实际色值：--color-brand1-6 88% + #FFFFFF 12%，sRGB 逐通道混合>" # 品牌交互元素悬停
@@ -187,15 +173,19 @@ YAML 维护变量值，正文维护角色关系。主题暗面、偏色灰和同
 
 ### 2.2 应用导航
 
+选中项用近白字与炭灰底表达，不把可变主色直接作为文字底色；更换深浅主色都保留清晰的当前入口。
+
 近黑导航与画布连为一体，当前菜单用品牌亮底和深字形成局部光点，弹层保持独立暗面。
 
-菜单轮廓使用 --pod-nav-menu-item-radius、--pod-nav-menu-item-border、--pod-nav-menu-item-hover-border、--pod-nav-menu-item-selected-border。侧栏和顶部菜单共用轮廓，各状态保持相同边框宽度，文字位置稳定；具体数值以本项目 Token 为准。
+常驻导航优先沿用平台原始样式，通过主题文字、背景与字重区分状态。菜单 border、box-shadow 是可选覆盖，没有明确用途就不声明；不为了统一风格给每项加框或投影。普通入口融入同一侧栏，按连续目录组织；分组靠留白与文字层级，不把导航复制成输入框、独立按钮或卡片堆叠。内容卡片、主按钮和表单可以使用更强的形状与材质，同一主题不意味着所有组件装饰强度相同。业务确有触控或特殊展示需求时，在本 design.md 调整并验收，不在运行时限制项目自定义值。
 
-导航与应用框架、表单、自定义页面和详情页共用设计语言。先按业务入口安排菜单、分组、搜索、品牌区与常用操作，再一起确定导航与正文的明暗、表面、字体、边界、圆角和密度。平台导航使用真实页面菜单；自绘导航按同一套导航 Token 实现。命名模板沿用自身 navTheme，换主色保持导航明暗与内容画布；需要另一导航明暗时改选主题，自由创意按项目明确设计。
+菜单圆角可通过 --pod-nav-menu-item-radius 与内容层级配套。只有明确需要自定义边界时才声明 --pod-nav-menu-item-border、--pod-nav-menu-item-hover-border、--pod-nav-menu-item-selected-border，并检查状态切换不引起文字跳动；省略时保留平台原始表现。
+
+导航与应用框架、表单、自定义页面和详情页共用设计语言。先按业务入口安排菜单、分组、搜索、品牌区与常用操作，再一起确定导航与正文的明暗、表面、字体、边界、圆角和密度。平台导航使用真实页面菜单；自绘导航按同一套导航 Token 实现。导航外观属于这份完整应用主题，颜色、三态边框、圆角、阴影与表单、详情和自定义页面一起设计。业务决定入口组织、操作频率与交互需求；主题决定这些需求的视觉表达。主色只是颜色角色之一，辅助色和材质色可以独立存在；仅显式 var 引用建立联动，不按主色批量染色。项目更换配色时，回到同一份 design.md 成组调整实际受影响的 Token，并核对五类界面的整体搭配。
 
 导航底色使用 --pod-shell-theme-bg-color；普通、悬停和选中文字分别使用 --pod-nav-item-text-color、--pod-nav-item-text-hover-color、--pod-nav-item-text-selected-color；悬停和选中背景使用 --pod-nav-menu-bg-hover-color、--pod-nav-menu-bg-selected-color。图标跟随对应文字状态，当前入口同时用背景或字重表达。
 
-菜单高度、圆角与间距使用 --pod-nav-menu-item-height、--pod-nav-menu-item-radius、--pod-nav-menu-gap；搜索、品牌区、分组、操作和弹出菜单使用 navigation 分组中的对应 Token。弹出菜单的底色、文字与搜索状态成组配套，导航与内容可以分别选择明暗。选中项使用 --pod-nav-menu-item-selected-shadow：none 关闭额外标记，完整 box-shadow 值可表达左、右或底部内阴影，不占据菜单布局空间；该 Token 独立于导航明暗。菜单高度、文字行高、内距和框架留白一起调整，给外阴影、长标题与键盘焦点留出空间。
+菜单高度、圆角与间距使用 --pod-nav-menu-item-height、--pod-nav-menu-item-radius、--pod-nav-menu-gap；搜索、品牌区、分组和操作优先沿用平台已有的变量绑定，navigation 分组只声明本主题需要覆盖的差异。弹出菜单的底色、文字与搜索状态成组配套，导航与内容可以分别选择明暗。选中项通常沿用平台样式；仅需额外位置标记时才声明 --pod-nav-menu-item-selected-shadow，显式 none 用于有意关闭阴影。省略时不生成额外 box-shadow 规则；该 Token 独立于导航明暗。菜单高度、文字行高、内距和框架留白一起调整，给外阴影、长标题与键盘焦点留出空间。
 
 桌面检查菜单、搜索、选中态与表单的协调；折叠后保留可识别图标和入口名称；窄屏保持菜单可展开、当前页面可定位、键盘焦点可见。提交、编辑、详情与自定义页都沿用这一导航设计。
 
@@ -295,6 +285,8 @@ YAML 维护变量值，正文维护角色关系。主题暗面、偏色灰和同
 轻量颜色过渡建议 120–180 ms（推断）。图表定位点在有效选择发生时出现，不持续呼吸；普通卡片不悬浮缩放。覆盖层内的输入、悬停和选中仍消费各自角色，不直接继承导航配色。
 
 ### 表单组件与版式结构
+
+原生表单与详情通过 appearance.native-form明确接入本主题：输入基础面使用 --color-fill1-1，边界使用 --color-line1-2，控件和只读数据框使用 --corner-2；焦点使用品牌交互角色。表单主面延续页面画布，操作底栏使用卡片表面与 --corner-5，详情保持正文前景与控件密度，不额外添加默认胶囊底栏或数据框阴影。项目有其他材质与状态需求时，在同一份 design.md 中调整对应 Token。
 
 表单使用与自定义页面相同的应用全局样式，字体、色彩、表面、边界、圆角、密度和状态延续本主题。表单支持在顶部、左侧、主体、右侧和字段之间组合 Tab/切换、按钮组/操作入口、图片/图形、状态区、标题与 `Divider`、`ColumnContainer`、辅助内容和业务字段。各组件承担导航、操作、视觉焦点、反馈、层级、节奏、装饰或采集作用。普通业务分组和章节分隔使用 `Divider`，横向字段组合使用 `ColumnContainer`。每张表单在项目 `design.md` 写清组件位置与作用、列比例、标签位置、字段与章节间距、底栏、详情延续和窄屏重排。
 

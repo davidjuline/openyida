@@ -677,13 +677,15 @@ describe('application theme from design.md', () => {
     const css = applyDesignTokens(template, fastDesign);
     expect(css).toContain('--color-brand1-6: #315BCC;');
     expect(css).toContain('--pod-card-border-radius: 16px;');
-    expect(css).not.toContain('rgba(155, 136, 121, 1)');
-    // The current base template omits derived brand aliases; generation adds them globally.
+    // Explicit brand references follow the new value; historical fallback colors
+    // remain fallback-only and must not be globally replaced by equal color value.
+    expect(css).toContain('--pod-nav-logo-bg: var(--color-brand1-6, rgba(155, 136, 121, 1));');
+    // Mobile aliases are present in the base template; generation also adds the chart palette.
     const root = css.match(/^:root\s*\{([^{}]*)\}/m)[1];
     for (const name of ['--color-brand-1', '--color-brand-2', '--color-brand-3', '--color-brand-4', '--color-group']) {
       expect(root).toContain(`${name}:`);
     }
-    const withoutAliases = css.replace(/^[ \t]*--(?:color-brand-[1-4]|color-group)\s*:[^;]+;\n/gm, '');
+    const withoutAliases = css.replace(/^[ \t]*--color-group\s*:[^;]+;\n/gm, '');
     expect(structure(withoutAliases)).toBe(structure(template));
     expect(css.match(/--color-error[^;]+;/g)).toEqual(template.match(/--color-error[^;]+;/g));
   });
@@ -711,35 +713,14 @@ describe('application theme from design.md', () => {
     let withoutExtra = css.replace(rootPattern, root => root.replace(
       /^[ \t]*(--[\w-]+)\s*:[^;]+;\n/gm, (line, name) => originalNames.has(name) ? line : ''
     ));
-    const platformNavigationTokens = new Set([...template.matchAll(/(--pod-(?:nav-|shell-|page-header-)[\w-]+)\s*:/g)]
-      .map(match => match[1]));
-    const declarations = source => Object.fromEntries([...source.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)]
-      .map(([, name, value]) => [name, value.trim()]));
-    const rootDefaults = Object.assign({}, ...[...template.matchAll(/^:root\s*\{([^}]+)\}/gm)]
-      .map(match => declarations(match[1])));
     const designTokens = readDesignTokens(design);
-    const activeTone = plan.visualStyle.forUser.selectedTheme.navTheme;
-    for (const tone of ['light', 'dark']) {
-      const scopedDefaults = { ...rootDefaults };
-      const modeScopes = ['nav', 'is'].map(kind => new RegExp(`(\\.pod-premium\\.${kind}-${tone}\\s*\\{)([^}]*)(\\})`));
-      modeScopes.forEach(pattern => Object.assign(scopedDefaults, declarations(template.match(pattern)[2])));
-      for (const pattern of modeScopes) {
-        const originalNames = new Set(Object.keys(declarations(template.match(pattern)[2])));
-        withoutExtra = withoutExtra.replace(pattern, (block, start, body, end) => start + body.replace(
-          /^[ \t]*(--[\w-]+)\s*:\s*([^;]+);\n/gm, (line, name, value) => {
-            if (originalNames.has(name)) {return line;}
-            // Added mode declarations must be real platform navigation tokens;
-            // the inactive mode restores its own defaults instead of leaking the project palette.
-            expect(platformNavigationTokens.has(name)).toBe(true);
-            expect(designTokens[name]).toBeDefined();
-            expect(value.trim()).toBe(tone === activeTone ? designTokens[name] : scopedDefaults[name]);
-            return '';
-          }
-        ) + end);
-      }
-    }
+    expect(css).not.toMatch(/\.pod-premium\.(?:is|nav)-(?:light|dark|white|gray)\s*\{/);
     const recipe = plan.visualStyle.forUser.selectedTheme.collection === 'application-styles'
       ? fs.readFileSync(path.join(__dirname, '../yida-skills/skills/yida-design/references/theme/application-style-recipes.css'), 'utf8') : '';
+    const shape = /\/\* openyida-navigation-shape:start \*\/[\s\S]*?\/\* openyida-navigation-shape:end \*\//;
+    const hasExtraShape = Object.keys(designTokens).some(name => /^--pod-nav-menu-item-(?:border|hover-border|selected-border|selected-shadow)$/.test(name));
+    expect(shape.test(withoutExtra)).toBe(hasExtraShape);
+    withoutExtra = withoutExtra.replace(shape, '');
     expect(structure(withoutExtra).trim()).toBe(structure(recipe ? template.trimEnd() + '\n\n' + recipe : template).trim());
   });
 

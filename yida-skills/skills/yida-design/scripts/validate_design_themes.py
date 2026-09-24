@@ -132,7 +132,7 @@ def validate_tokens(frontmatter: dict, text: str, label: str, contract: dict, er
     unsupported = set(declared) & {"--color-brand1-4", "--color-brand1-7", "--color-brand1-8"}
     if unsupported:
         errors.append(f"{label} 不支持的品牌色阶：{', '.join(sorted(unsupported))}")
-    unknown = set(TOKEN_REFERENCE.findall(text)) - set(declared)
+    unknown = set(TOKEN_REFERENCE.findall(text)) - set(declared) - contract["platformTokens"]
     if unknown:
         errors.append(f"{label} 引用了未声明变量：{', '.join(sorted(unknown))}")
     dependencies = {name: set(TOKEN_REFERENCE.findall(value)) for name, value in declared.items()}
@@ -169,6 +169,8 @@ def validate(skill_root: Path) -> list[str]:
         if not isinstance(themes, list) or not themes:
             return ["主题索引缺少非空 themes 数组"]
         contract = json.loads((template_dir / "basic-tokens.json").read_text(encoding="utf-8"))
+        platform_css = (skill_root / "references/theme/app-custom-theme-template.css").read_text(encoding="utf-8")
+        contract["platformTokens"] = set(re.findall(r"^\s*(--[\w-]+)\s*:", platform_css, re.M))
         names = [name for group in contract["groups"].values() for name in group]
         if len(set(names)) != len(names) or not all(isinstance(name, str) and TOKEN_NAME.fullmatch(name) for name in names):
             return ["基础变量契约含重复或非法变量名"]

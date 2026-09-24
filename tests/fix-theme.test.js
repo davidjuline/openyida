@@ -1,7 +1,7 @@
 'use strict';
 
 const Babel = require('@babel/standalone');
-const { transformFixedBrandTheme, expandRemovalSpan } = require('../lib/app/fix-theme');
+const { transformFixedBrandTheme } = require('../lib/app/fix-theme');
 const { assertCanvasThemeStructure } = require('../lib/app/canvas-theme-guard');
 
 // Reparse the migrated output; a codemod that emits broken syntax is a bug.
@@ -75,11 +75,22 @@ test('drops a preceding comma when the fixed override is the last property', () 
   expect(parses(result.output)).toBe(true);
 });
 
-test('expandRemovalSpan clears the whole line when a property stands alone', () => {
-  const source = 'const theme = {\n  colorPrimary: "#1677ff",\n  borderRadius: 12,\n};\n';
-  const start = source.indexOf('colorPrimary');
-  const end = source.indexOf('"#1677ff"') + '"#1677ff"'.length;
-  const span = expandRemovalSpan(source, start, end);
-  const output = source.slice(0, span.start) + source.slice(span.end);
-  expect(output).toBe('const theme = {\n  borderRadius: 12,\n};\n');
+test.each([
+  "{token:{colorPrimary:'#1677ff' /* brand */,borderRadius:12}}",
+  "{token:{colorPrimary:'#1677ff' // brand\n,borderRadius:12}}",
+  "{token:{borderRadius:12,/* brand */colorPrimary:'#1677ff'}}",
+  "{token:{colorPrimary:'#1677ff',colorLink:'#1677ff' /* link */,borderRadius:12}}",
+])('preserves valid syntax and unrelated tokens around comments: %s', theme => {
+  const result = transformFixedBrandTheme(wrap(theme));
+  expect(result.changed).toBe(true);
+  expect(result.output).toContain('borderRadius:12');
+  expect(result.output).not.toContain('#1677ff');
+  expect(parses(result.output)).toBe(true);
+  expect(transformFixedBrandTheme(result.output).changed).toBe(false);
+});
+
+test('keeps the maintained dynamic provider and its drawer theme unchanged', () => {
+  const { buildApplicationProvider } = require('../yida-skills/skills/yida-canvas-custom-page/scripts/build-canvas-theme');
+  const source = buildApplicationProvider();
+  expect(transformFixedBrandTheme(source)).toEqual({ changed: false, output: source, violations: [] });
 });

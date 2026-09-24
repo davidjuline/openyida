@@ -117,7 +117,11 @@ test('fixed brand error under --strict-theme carries local-only, non-network rec
 
 test('relaxes fixed brand to a non-blocking warning by default so users are not stuck', () => {
   const warnings = [];
-  expect(compileCanvasLocal(fixedBrand, { onThemeWarning: message => warnings.push(message) }).runtimeCode).toBeTruthy();
+  const result = compileCanvasLocal(fixedBrand, { onThemeWarning: message => warnings.push(message) });
+  expect(result.runtimeCode).toContain('#1677ff');
+  expect(result.warnings).toEqual([expect.objectContaining({
+    code: 'OPENYIDA_CANVAS_THEME_FIXED_BRAND', field: 'colorPrimary', value: '#1677ff', themeConsistency: 'fixed_override',
+  })]);
   expect(warnings).toHaveLength(1);
 });
 
@@ -150,4 +154,3 @@ test('honors OPENYIDA_CANVAS_ALLOW_FIXED_BRAND env as the bypass switch', () => 
     else { process.env.OPENYIDA_CANVAS_ALLOW_FIXED_BRAND = previous; }
   }
 });
-

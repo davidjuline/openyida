@@ -84,10 +84,10 @@ Plan 将下列对象写入 `visualStyle.creativeDirection`；Fast 写入最终�
 
 Plan 的 `visualStyle.tokens` 必须显式提供：画布 `--pod-page-bg-color`、表面 `--pod-card-bg-color`、文字 `--color-text1-4`、控件 `--form-element-medium-corner` / `--form-element-medium-height`、底栏 `--pod-page-footer-bg-color` / `--pod-sticky-footer-box-shadow`，以及自定义页面 `--oyd-content-width` / `--oyd-content-padding` / `--oyd-field-gap` / `--oyd-heading-font` / `--oyd-heading-size` / `--oyd-rule-style`。其余角色同样按完整设计配套，数据管理外层底栏与按钮内层分别决定。Fast 将这些值写入设计的 Token 分组。缺少决策或关键值时生成器报错，不自动选一套模板。
 
-自由创意还需显式写入 [六个基础导航色](application-theme-consistency.md#导航与应用框架) 与 `navTheme`，并按业务布局设计框架、菜单形状、文字、间距及状态。Fast 与 Plan 使用同一完整主题文件。
+自由创意显式选择 `navTheme`，按业务布局设计框架与菜单，仅填写[必要的导航覆盖项](application-theme-consistency.md#导航与应用框架)，其余沿用平台绑定。Fast 与 Plan 使用同一完整主题文件。
 
 ## 验收与维护
 
 看应用整体，覆盖导航、自定义页、提交、编辑、详情、数据管理内嵌、抽屉和移动端，核对正文/底栏对齐、背景连续、hover/focus、禁用/错误和窄屏布局。应用主题与表单组件树共同作为验收基线。
 
-维护既有主题时修改对应目录的 `design.md` 与 `form-layout.json`；维护导航时修改 `templates/navigation-styles.json`，维护应用风格预设时修改 `templates/application-styles.json` 与共用配方，再运行 `node scripts/build-application-styles.js`；随后运行模板、Plan/Fast、原生布局测试及 `check:skills`。该脚本仅用于仓库维护，应用搭建使用上述 CLI。
+每个主题目录的 `design.md` 是完整视觉设计的唯一维护源：导航、应用框架、自定义页面、表单和详情的颜色、边框、hover、圆角、阴影、字体与密度在同一文件中定义。`form-layout.json` 维护表单结构，`app_theme.css` 是配对生成物；不另建导航配色库或应用风格配置覆盖它们。修改设计后运行 `node scripts/build-application-styles.js`，脚本只编译 CSS，不改写设计正文、Token、表单结构或索引。`npm run check:themes`（即 `node scripts/build-application-styles.js --check`）检查所有配对 CSS 是否同步，已接入 `check:quick` 和 CI。新增模板时添加三文件目录和索引项。随后运行模板、Plan/Fast、原生布局测试及 `check:skills`。该脚本仅用于仓库维护，应用搭建使用上述 CLI。

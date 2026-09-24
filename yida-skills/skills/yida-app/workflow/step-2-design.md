@@ -16,7 +16,7 @@
 
 澄清结束后，完成以下准备；字段格式按 [交接契约](../../yida-requirement-analysis/references/handoff.md#规划阶段补齐) 写回同一份 brief：
 
-1. 按 Step 1 核验确实需要的资源上下文，保留用户显式目标；纯需求/方案讨论不要求登录，不执行资源写操作。
+1. 按 Step 1 核验确实需要的资源上下文，保留用户显式目标；仅整理需求或编写方案时不要求登录，不执行资源写操作。
 2. 按 [模式路由](../../yida-design/references/design-mode.md) 确定执行方式，沿用用户最后一次明确选择。
 3. AI 根据有效功能、`userTasks` 与 `entryRecommendation`，按 [导航决策](../../yida-design/references/navigation-decision.md) 规划各入口的页面和菜单，补齐稳定 `pageScenes` 与主题映射。新增建议标记来源，范围遵守 explicitScope。
 

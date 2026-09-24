@@ -48,7 +48,7 @@ describe('OpenYida skill contracts', () => {
     expect(step7).toContain('Fast 也明确同样边界');
     expect(step7).not.toContain('页面导航隐藏应由独立配置任务立即执行');
     const decision = readSkill('yida-skills/skills/yida-design/references/navigation-decision.md');
-    expect(decision).toContain('## 方案讨论与确认');
+    expect(decision).toContain('## 导航交付与确认');
     expect(decision).toContain('不新增导航审批环节');
     const parallel = readSkill('yida-skills/skills/yida-app/workflow/parallel-work.md');
     expect(parallel).toContain('平台导航管理页保留导航，不加入隐藏队列');
@@ -137,7 +137,9 @@ describe('OpenYida skill contracts', () => {
     expect(compactSchema).toContain('按优先顺序填写 `{name,purpose}`');
     expect(compactSchema).toContain('与按资源生成的通用检查合并并去重');
     expect(planBusiness).toContain('功能范围、数据与规则、页面组织、关键交互、业务验收');
-    expect(planWorkflow).toContain('只物化一次');
+    expect(planWorkflow).toContain('`maxSuccessfulCalls: 1`');
+    expect(planWorkflow).toContain('失败按 `repairPolicy` 修复');
+    expect(planWorkflow).toContain('不能重复提交未修改的输入');
     expect(parallel).toContain('业务任务必须先读后写');
     expect(planBusiness).toContain('普通表单的 sampleDataPlan 用 skipReason');
     expect(compactSchema).toContain('避免用多轮 materialize 探测必填字段');
@@ -1435,7 +1437,8 @@ describe('OpenYida skill contracts', () => {
     expect(outputDesign).toContain('校验脚本只能读取并报告问题，不能改写主题文件');
     expect(outputDesign).toContain('`--pod-nav-menu-item-selected-shadow` 作为方向无关的基础外观 Token 独立透传');
     expect(navShellPatterns).toContain('| 菜单选中标记 | `--pod-nav-menu-item-selected-shadow`');
-    expect(navShellPatterns).toContain('`canvas-nav-side/top/mixed/dock` 共用上述菜单圆角、三种边框和选中阴影');
+    expect(navShellPatterns).toContain('不要求声明三种边框和选中阴影');
+    expect(navShellPatterns).toContain('普通项默认透明无框');
     expect(step2).toContain('导航选中态与按钮不同色不直接判为冲突');
     expect(styleSelection).toContain('沿用已确认主题，只补当前页面');
     expect(canvasStyleGuide).toContain('按本指南把 `design.md` 的布局、材质、密度、图表和控件样式写入 Canvas 页面');

@@ -10,6 +10,8 @@
 
 ## 选择主题色
 
+必需的品牌色阶是 `--color-brand1-1/2/3/5/6/9/10` 七档，统一写入 design.md 并生成到顶层 `:root`。精简可选导航 token 时仍须保留完整色阶。生成或上传报缺档、空值或引用问题时回到设计源修复，不以只替换主色、局部页面声明或追加默认调色板绕过校验。
+
 先确定主题色来源，再生成应用主题文件。用户确认“自然绿意”等整体风格时，页面浅底、卡片、填充、边界和交互一起协调，不能只改主按钮；字体保持清晰中性层级，状态保持语义色。模板固定雾白/灰阶不能覆盖该选择。完整规则见 [用户配色与模板的优先级](output-design.md#用户配色与模板的优先级)。主题色来源优先级如下：
 
 | 优先级 | themeColorSource | 触发条件 | 输出规则 |
@@ -20,12 +22,12 @@
 
 
 1. 先判断业务气质：行业、目标用户、品牌关键词、业务情绪、视觉目标，以及是否需要亲和/专业/活力/稳重/科技/自然感。
-2. 在 `design.md` 中记录主题色、`navTheme`、`logoSource` 和业务已确定的 `layoutDirection`。命名模板继承完整导航 token 和模板派生的 `navTheme`；自由创意明确设计两者。按 [导航与应用框架](../references/application-theme-consistency.md#导航与应用框架) 将导航外观与各类页面一起写入主题。
+2. 在 `design.md` 中记录主题色、`navTheme`、`logoSource` 和业务已确定的 `layoutDirection`。命名模板继承导航差异 token（未声明项沿用平台绑定） 和模板派生的 `navTheme`；自由创意明确设计两者。按 [导航与应用框架](../references/application-theme-consistency.md#导航与应用框架) 将导航外观与各类页面一起写入主题。
 3. 主题文件按 [生成与更新规则](output-design.md#cli-token-契约fast--plan-共用) 准备；Plan 复用已生成的主题 CSS。
 4. 主题 CSS 生成后读取并核对目标 token；需要修改变量时回到设计源文件，再通过 CLI 生成并重新上传。只有 CLI 未覆盖且已核实选择器的样式覆盖，才在现有 CSS 末尾小范围追加。按 [共用主题规则](../references/application-theme-consistency.md) 处理，不另写脚本生成或重写主题文件。
 5. 整体暗色时，按 [浮层适配](../references/theme/theme-token-presets.md#暗色主题浮层适配) 补齐组件 token 和必要的 classname 覆盖。
 6. `podBlue`、`podGreen`、`podOrange` 只是常用浅底候选，不是固定默认。不要因为没有特别说明就自动回到 #1677ff，也不要套用“科技=蓝、宠物=橙、法律=蓝”这类行业刻板配色。
-7. 主题色只作为后续所选设计风格的换肤输入；除用户明确要求深色/夜间/高对比外，不用主题色反向决定风格。
+7. 先读取所选模板的完整 Token 和颜色角色，再确定项目主色与实际修改范围。主色是整套设计中的一个角色，不是覆盖导航、表单、详情和画布的全局染色参数；不能独立选主色后直接拼接另一套固定导航。用户明确要求换色时，在同一份设计里协调所有受影响的角色，保留有意设计的辅助色与状态色。
 
 ## 品牌 token 语义
 
@@ -65,6 +67,7 @@
 - 语义色：成功、警告、错误、信息保持稳定，不随意改成品牌色。
 - 界面明暗：默认浅色；用户选择暗色、黑色或夜间主题时，按 [暗色主题浮层适配](../references/theme/theme-token-presets.md#暗色主题浮层适配) 确定浮层 token 与必要的 class 覆盖。
 - 导航明暗：`themeProfile.navTheme` 从所选主题模板的 `navTheme` 派生；深色导航可以搭配浅色内容界面。用户明确要求另一种导航明暗时重新匹配主题，不在项目化阶段改写模板导航 Token。
+- 固定主题输出一套 token；light、dark、white、gray 只是同一声明块的覆盖入口，不根据模式生成另一套配色。同步应用设置时读取设计中的 `navTheme`，不能用主题 ID 前缀或写死名单判断。
 - 明暗双轴：按[主题明暗双轴](../references/application-style-library.md#主题明暗双轴)分别填写 `themeProfile.contentTone` 与 `themeProfile.navTheme`。`contentTone` 默认 `light`；自由创意的导航明暗由项目设计明确填写，并配套导航 Token。
 - `design.md` 的 `themeProfile.colorMode` 是宜搭配色模式，例如 `gradient`，不表示暗黑模式。
 
@@ -116,3 +119,5 @@ design.md 的机器字段与正文分工按 output-design.md：
 
 
 应用整体设计可使用[应用风格模板或自由创意](../references/application-style-library.md)。导航、自定义页面、表单与详情继承同一设计语言；自由创意从业务推演，不强制选模板。模板中的表单布局 JSON 提供结构起点，使用时填入真实字段并核对间距和响应式。
+
+移动端 `--color-brand-1`、`--color-brand-2`、`--color-brand-3`、`--color-brand-4` 由 CLI 按应用色阶生成桥接；最终 CSS 也必须在顶层 `:root` 完整提供这四项。生成后和上传前同时校验 PC 七档与移动端四档的缺失、无效颜色及引用循环，不要求在 design.md 重复声明自动桥接。

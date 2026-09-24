@@ -2641,7 +2641,7 @@ test('command and agent navigation policies align with AI intake decisions', () 
     expect(route.product_design_policy).toContain('plus scoped custom-page variables');
     expect(route.product_design_policy).toContain('Each selected template is the authority for navTheme, its six navigation color tokens, and its selected-item shadow token');
     expect(route.product_design_policy).toContain('preserves mode-independent navigation appearance tokens');
-    expect(route.product_design_policy).toContain('never synthesizes a replacement navigation palette');
+    expect(route.product_design_policy).toContain('Light, dark, white and gray mode classes consume the same project tokens');
   }
   expect(workflow.default_nav_order_policy).toContain('preserves platform navigation for the management workspace');
   expect(workflow.entry_navigation_contract).toMatchObject({
@@ -2794,18 +2794,20 @@ test('Plan CLI and design-file sample work locally without a login', () => {
     expect(fs.existsSync(path.join(dir, 'design.md'))).toBe(false);
     runOk(['design-plan', 'materialize', input, '--json']);
     const { readDesignTokens } = require('../lib/app/theme-from-design');
-    const { parseDesignDocument } = require('../lib/design/document');
+    const { topLevelRules } = require('../lib/app/theme-scope');
     const contract = require('../yida-skills/skills/yida-design/templates/design-themes/basic-tokens.json');
     const design = fs.readFileSync(path.join(dir, 'design.md'), 'utf8');
     const tokens = readDesignTokens(design);
-    const activeTone = parseDesignDocument(design).metadata.themeProfile.navTheme;
     const template = fs.readFileSync(path.join(ROOT, 'yida-skills/skills/yida-design/references/theme/app-custom-theme-template.css'), 'utf8');
-    const platformNavigationTokens = new Set([...template.matchAll(/(--pod-(?:nav-|shell-|page-header-)[\w-]+)\s*:/g)]
+    const platformTokens = new Set([...template.matchAll(/(--[\w-]+)\s*:/g)]
       .map(match => match[1]));
+    // Native form templates also author this platform token; the shared CSS
+    // leaves its default to the platform until a design explicitly overrides it.
+    platformTokens.add('--input-hover-bg-color');
     expect(Object.keys(tokens)).toEqual(expect.arrayContaining(Object.values(contract.groups).flat()));
     expect(Object.keys(tokens).filter(name => !Object.values(contract.groups).flat().includes(name))
-      .every(name => name.startsWith('--oyd-') || platformNavigationTokens.has(name))).toBe(true);
-    expect(platformNavigationTokens.has('--pod-nav-unknown-token')).toBe(false);
+      .every(name => name.startsWith('--oyd-') || platformTokens.has(name))).toBe(true);
+    expect(platformTokens.has('--pod-nav-unknown-token')).toBe(false);
     for (const [name, value] of Object.entries(contract.fixedValues)) {
       expect(tokens[name]).toBe(value);
     }
@@ -2824,29 +2826,13 @@ test('Plan CLI and design-file sample work locally without a login', () => {
     expect(readDesignTokens(patchedDesign)['--pod-nav-menu-item-selected-shadow']).toBe(selectedShadow);
     expect(patchedDesign).toContain(`| 选中项阴影 | --pod-nav-menu-item-selected-shadow | ${selectedShadow} |`);
     expect(css).toContain(`--pod-nav-menu-item-selected-shadow: ${selectedShadow};`);
-    const scope = (source, tone) => source.match(new RegExp(`\\.pod-premium\\.nav-${tone}\\s*\\{([^}]+)\\}`))[1];
+    const globalRules = topLevelRules(css).filter(rule => rule.selector.split(',').map(x => x.trim()).includes(':root'));
+    expect(globalRules).toHaveLength(1);
     for (const tone of ['light', 'dark', 'white', 'gray']) {
-      const background = tone === activeTone ? tokens['--pod-shell-theme-bg-color']
-        : scope(template, tone).match(/--pod-shell-theme-bg-color:\s*([^;]+);/)[1];
-      const block = scope(css, tone);
-      expect(block).toContain(`--pod-shell-theme-bg-color: ${background};`);
-      if (tone !== activeTone) {
-        const defaults = scope(template, tone);
-        const originalNames = new Set([...defaults.matchAll(/(--[\w-]+)\s*:/g)].map(match => match[1]));
-        const existing = block.replace(/^[ \t]*(--[\w-]+)\s*:[^;]+;\n/gm,
-          (line, name) => originalNames.has(name) ? line : '');
-        expect(existing).toBe(defaults);
-        const rootDefaults = Object.assign({}, ...[...template.matchAll(/^:root\s*\{([^}]+)\}/gm)]
-          .map(match => Object.fromEntries([...match[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)]
-            .map(([, name, value]) => [name, value.trim()]))));
-        for (const [, name, value] of block.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-          if (!originalNames.has(name)) {
-            expect(platformNavigationTokens.has(name)).toBe(true);
-            expect(value.trim()).toBe(rootDefaults[name]);
-          }
-        }
-      }
+      expect(globalRules[0].selector).toContain(`.pod-premium.nav-${tone}`);
+      expect(globalRules[0].body).toContain(`--pod-shell-theme-bg-color: ${tokens['--pod-shell-theme-bg-color']};`);
     }
+    expect(css).not.toMatch(/\.pod-premium\.(?:is|nav)-(?:light|dark|white|gray)\s*\{/);
   } finally {fs.rmSync(dir, { recursive: true, force: true });}
 });
 

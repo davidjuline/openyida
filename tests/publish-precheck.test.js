@@ -86,6 +86,45 @@ describe('publish prechecks', () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   });
 
+  test('fix-theme requires a mounted theme provider and never rewrites an unthemed page', async () => {
+    const sourcePath = path.join(workspace, 'theme.canvas.jsx');
+    const source = "import {ConfigProvider} from 'antd'; function YidaComp(){return <ConfigProvider theme={{token:{colorPrimary:'#1677ff'}}}><div/></ConfigProvider>}";
+    fs.writeFileSync(sourcePath, source);
+    await expect(publishPage([sourcePath, 'APP_XXX', 'FORM-PAGE', '--fix-theme', '--json']))
+      .rejects.toMatchObject({ code: 'OPENYIDA_CANVAS_THEME_PROVIDER_INVALID', details: { issueType: 'provider_missing' } });
+    expect(fs.readFileSync(sourcePath, 'utf8')).toBe(source);
+  });
+
+  test('a later compile error leaves the original source intact after preparing a theme migration', async () => {
+    const { buildApplicationProvider } = require('../yida-skills/skills/yida-canvas-custom-page/scripts/build-canvas-theme');
+    const sourcePath = path.join(workspace, 'theme.canvas.jsx');
+    const source = buildApplicationProvider() + `
+      function YidaComp(){return <CanvasThemeProvider><ConfigProvider theme={{token:{colorPrimary:'#1677ff' /* brand */,borderRadius:12}}}><UnknownComponent/></ConfigProvider></CanvasThemeProvider>}
+    `;
+    fs.writeFileSync(sourcePath, source);
+    await expect(publishPage([sourcePath, 'APP_XXX', 'FORM-PAGE', '--fix-theme', '--json'])).rejects.toThrow();
+    expect(fs.readFileSync(sourcePath, 'utf8')).toBe(source);
+  });
+
+  test('strict publish under a PTY rejects locally without opening a prompt, even with JSON', async () => {
+    const sourcePath = path.join(workspace, 'theme.canvas.jsx');
+    fs.writeFileSync(sourcePath, "import {ConfigProvider} from 'antd'; function YidaComp(){return <ConfigProvider theme={{token:{colorPrimary:'#1677ff'}}}><div/></ConfigProvider>}");
+    const descriptors = [process.stdin, process.stderr].map(stream => Object.getOwnPropertyDescriptor(stream, 'isTTY'));
+    const prompt = jest.spyOn(require('readline'), 'createInterface');
+    try {
+      for (const stream of [process.stdin, process.stderr]) { Object.defineProperty(stream, 'isTTY', { configurable: true, value: true }); }
+      await expect(publishPage([sourcePath, 'APP_XXX', 'FORM-PAGE', '--strict-theme', '--json']))
+        .rejects.toMatchObject({ code: 'OPENYIDA_CANVAS_THEME_FIXED_BRAND' });
+      expect(prompt).not.toHaveBeenCalled();
+    } finally {
+      [process.stdin, process.stderr].forEach((stream, index) => {
+        if (descriptors[index]) { Object.defineProperty(stream, 'isTTY', descriptors[index]); }
+        else { delete stream.isTTY; }
+      });
+      prompt.mockRestore();
+    }
+  });
+
   test('detects project and artifacts copies with the same name but different content', () => {
     const projectRoot = path.join(workspace, 'project');
     const projectSourceDir = path.join(projectRoot, 'pages', 'src');

@@ -17,14 +17,13 @@ const PYTHON = [['python3', []], ['python', []], ['py', ['-3']]].find(([command,
 
 test('shipped themes inherit project color and declare the selected-item shadow contract', () => {
   const index = JSON.parse(fs.readFileSync(path.join(THEMES, 'index.json'), 'utf8'));
-  const navigation = require('../yida-skills/skills/yida-design/templates/navigation-styles.json');
   for (const theme of index.themes) {
     const source = fs.readFileSync(path.join(SKILL, theme.templatePath), 'utf8');
     expect(source).not.toMatch(/(?:无品牌色|没有品牌色)[^。\n]*(?:默认[^。\n]*(?:蓝色|冷色|纯黑)|(?:蓝色|冷色|纯黑)[^。\n]*默认)/);
     expect(source).toContain('{{PRIMARY_COLOR}}');
     const shadow = /"--pod-nav-menu-item-selected-shadow":\s*"([^"]+)"/.exec(source);
-    expect(shadow).not.toBeNull();
-    expect(shadow[1]).toBe(navigation[theme.themeId]?.selectedShadow || 'none');
+    const css = fs.readFileSync(path.join(SKILL, theme.cssTemplatePath), 'utf8');
+    expect(css).toContain(`--pod-nav-menu-item-selected-shadow: ${shadow ? shadow[1] : 'none'};`);
   }
 });
 
@@ -59,6 +58,8 @@ function withFixture(run) {
     const index = JSON.parse(fs.readFileSync(path.join(THEMES, 'index.json'), 'utf8'));
     index.themes = index.themes.slice(0, 1);
     fs.copyFileSync(path.join(THEMES, 'basic-tokens.json'), path.join(themes, 'basic-tokens.json'));
+    fs.mkdirSync(path.join(skill, 'references/theme'), { recursive: true });
+    fs.copyFileSync(path.join(SKILL, 'references/theme/app-custom-theme-template.css'), path.join(skill, 'references/theme/app-custom-theme-template.css'));
     for (const relative of ['../yida-app/workflow/plan/step-2-confirm.md', 'sub_skill/yida-design-plan/references/visual-theme-selection.md', 'sub_skill/yida-design-plan/references/build-plan-schema.md']) {
       const file = path.resolve(skill, relative);
       fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -94,7 +95,7 @@ test.each([
   ['fixed font size', source => source.replace('"--font-size-subhead": "18px"', '"--font-size-subhead": "24px"'), '--font-size-subhead 应使用固定值'],
   ['unquoted spacing', source => source.replace('"--s-5": 20px', '"--s-5": 22px'), '--s-5 应使用固定值'],
   ['numeric font weight', source => source.replace('"--font-weight-subhead": 500', '"--font-weight-subhead": 600'), '--font-weight-subhead 应使用固定值'],
-  ['missing appearance token', source => source.replace(/^.*"--pod-nav-item-text-color":.*\n/m, ''), '全局变量集合'],
+  ['missing appearance token', source => source.replace(/^.*"--pod-page-bg-color":.*\n/m, ''), '全局变量集合'],
   ['missing nav theme', source => source.replace(/^navTheme:.*\n/m, ''), 'navTheme 必须是 light 或 dark'],
   ['invalid nav theme', source => source.replace(/^navTheme:.*$/m, 'navTheme: auto'), 'navTheme 必须是 light 或 dark'],
   ['cross-group cycle', source => source.replace('"--pod-page-bg-color": "#000000"', '"--pod-page-bg-color": "var(--oyd-inset-surface)"').replace('"--oyd-inset-surface": "#000000"', '"--oyd-inset-surface": "var(--pod-page-bg-color)"'), '变量循环引用'],

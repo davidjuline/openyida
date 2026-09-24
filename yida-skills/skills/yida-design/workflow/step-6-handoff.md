@@ -20,3 +20,5 @@ Fast 完成手写后执行 `openyida check-design prd/<项目名>/design.md --js
 跨文档检查会核对 PRD 的 `designFile` 是否指向当前设计文件。默认从项目工作目录执行；从其他目录检查时用 `--base-dir <项目根目录>` 解析 PRD 中的相对引用，命令输入文件的路径仍相对当前工作目录。导出包按同一规则检查，不能忽略路径不一致错误。
 
 主题 CSS 生成与上传沿用 [输出契约](output-design.md#应用主题-css-的职责)。CLI 会检查括号、字符串及注释闭合，报错时先修复源文件；`check-design` 通过不代表 CSS 已校验或页面视觉已验收。
+
+主题 CSS 交付前必须完成实例化：模板中的 `{{PRIMARY_COLOR}}` 和 `<生成实际色值：…>` 不可上传，不能只替换主色。完成 design.md 后执行 `openyida sample yida-design app-theme --design-file <design.md> --output <app-theme.css>`；遇到 `THEME_CSS_UNRESOLVED_TOKEN` 按返回的 token 修复设计源并重新生成。
