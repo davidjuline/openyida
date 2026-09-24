@@ -57,13 +57,13 @@ describe('OAuth device authorization flow', () => {
       'https://example.test/openapi/cli/v1/auth/device/code', {
         clientId: 'client-1',
         envHint: 'pre',
-      });
+      }, {}, {});
     expect(requestJson).toHaveBeenNthCalledWith(2, 'POST',
       'https://example.test/openapi/cli/v1/auth/device/token', {
         grantType: DEVICE_GRANT_TYPE,
         deviceCode: 'device-1',
         clientId: 'client-1',
-      });
+      }, {}, expect.objectContaining({ timeoutMs: expect.any(Number) }));
     expect(states[0]).toMatchObject({
       state: 'awaiting_verification',
       verificationUri: 'https://example.test/openapi/cli/v1/auth/device/verify',
@@ -113,6 +113,68 @@ describe('OAuth device authorization flow', () => {
     expect(states).toEqual(expect.arrayContaining([
       expect.objectContaining({ state: 'poll_retry', statusCode: 400 }),
     ]));
+  });
+
+  test('redacts sensitive data in poll_retry body', async () => {
+    const requestJson = jest.fn()
+      .mockRejectedValueOnce(oauthError(400, { raw: 'token=abc123secret&Cookie: session=xyz' }))
+      .mockResolvedValueOnce({ accessToken: 'safe-token' });
+    const { pollDeviceToken } = loadDeviceModule(requestJson);
+    const states = [];
+
+    await pollDeviceToken({
+      authBaseUrl: 'https://example.test/auth',
+      clientId: 'client-1',
+      deviceCode: 'device-1',
+      intervalMs: 1,
+      timeoutMs: 1000,
+      onState: state => states.push(state),
+    });
+
+    const retryState = states.find(s => s.state === 'poll_retry');
+    expect(retryState).toBeDefined();
+    expect(retryState.body).not.toMatch(/abc123secret/);
+    expect(retryState.body).not.toMatch(/session=xyz/);
+    expect(retryState.body).toMatch(/\*\*\*/);
+  });
+
+  test('does not hang when /device/token connects but never responds', async () => {
+    // Simulate a request that neither resolves nor rejects on its own,
+    // but honors the socket timeout passed via options.timeoutMs.
+    function requestJsonStub(method, url, body, headers, options) {
+      const ms = (options && options.timeoutMs) || 100;
+      return new Promise((_, reject) => {
+        setTimeout(() => {
+          const err = new Error('request timed out');
+          err.code = 'request_timeout';
+          reject(err);
+        }, ms);
+      });
+    }
+    const requestJson = jest.fn(requestJsonStub);
+    const { pollDeviceToken } = loadDeviceModule(requestJson);
+    const startTime = Date.now();
+
+    await expect(pollDeviceToken({
+      authBaseUrl: 'https://example.test/auth',
+      clientId: 'client-1',
+      deviceCode: 'device-1',
+      intervalMs: 1,
+      timeoutMs: 50,
+    })).rejects.toMatchObject({
+      code: expect.stringMatching(/request_timeout|device_timeout/),
+    });
+
+    // Should reject within a reasonable time, not hang indefinitely.
+    expect(Date.now() - startTime).toBeLessThan(5000);
+    // Verify the remaining budget was passed into the HTTP layer.
+    expect(requestJson).toHaveBeenCalledWith(
+      'POST',
+      'https://example.test/auth/device/token',
+      expect.objectContaining({ deviceCode: 'device-1' }),
+      {},
+      expect.objectContaining({ timeoutMs: expect.any(Number) })
+    );
   });
 
   test('applies slow_down to subsequent polling', async () => {
