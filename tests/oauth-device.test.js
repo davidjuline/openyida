@@ -1,5 +1,7 @@
 'use strict';
 
+const http = require('http');
+
 function oauthError(statusCode, payload) {
   const error = new Error(`http_${statusCode}`);
   error.statusCode = statusCode;
@@ -57,7 +59,7 @@ describe('OAuth device authorization flow', () => {
       'https://example.test/openapi/cli/v1/auth/device/code', {
         clientId: 'client-1',
         envHint: 'pre',
-      }, {}, {});
+      }, {}, expect.objectContaining({ timeoutMs: expect.any(Number) }));
     expect(requestJson).toHaveBeenNthCalledWith(2, 'POST',
       'https://example.test/openapi/cli/v1/auth/device/token', {
         grantType: DEVICE_GRANT_TYPE,
@@ -138,43 +140,60 @@ describe('OAuth device authorization flow', () => {
     expect(retryState.body).toMatch(/\*\*\*/);
   });
 
-  test('does not hang when /device/token connects but never responds', async () => {
-    // Simulate a request that neither resolves nor rejects on its own,
-    // but honors the socket timeout passed via options.timeoutMs.
-    function requestJsonStub(method, url, body, headers, options) {
-      const ms = (options && options.timeoutMs) || 100;
-      return new Promise((_, reject) => {
-        setTimeout(() => {
-          const err = new Error('request timed out');
-          err.code = 'request_timeout';
-          reject(err);
-        }, ms);
-      });
-    }
-    const requestJson = jest.fn(requestJsonStub);
-    const { pollDeviceToken } = loadDeviceModule(requestJson);
-    const startTime = Date.now();
-
-    await expect(pollDeviceToken({
-      authBaseUrl: 'https://example.test/auth',
-      clientId: 'client-1',
-      deviceCode: 'device-1',
-      intervalMs: 1,
-      timeoutMs: 50,
-    })).rejects.toMatchObject({
-      code: expect.stringMatching(/request_timeout|device_timeout/),
+  test('does not hang when the real /device/token HTTP response never completes', async () => {
+    const server = http.createServer((request, response) => {
+      if (request.url === '/auth/device/code') {
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({
+          deviceCode: 'device-1',
+          userCode: 'ABCD-EFGH',
+          verificationUri: 'https://example.test/verify',
+          expiresIn: 600,
+          interval: 0.001,
+        }));
+      }
+      // Intentionally leave /device/token connected without a response.
     });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address();
 
-    // Should reject within a reasonable time, not hang indefinitely.
-    expect(Date.now() - startTime).toBeLessThan(5000);
-    // Verify the remaining budget was passed into the HTTP layer.
-    expect(requestJson).toHaveBeenCalledWith(
-      'POST',
-      'https://example.test/auth/device/token',
-      expect.objectContaining({ deviceCode: 'device-1' }),
-      {},
-      expect.objectContaining({ timeoutMs: expect.any(Number) })
-    );
+    try {
+      jest.resetModules();
+      const { runDeviceCodeFlow } = require('../lib/auth/oauth-device');
+      const startTime = Date.now();
+      await expect(runDeviceCodeFlow({
+        authBaseUrl: `http://127.0.0.1:${port}/auth`,
+        clientId: 'client-1',
+        quiet: true,
+        timeoutMs: 50,
+      })).rejects.toMatchObject({ code: 'device_timeout' });
+      expect(Date.now() - startTime).toBeLessThan(5000);
+    } finally {
+      server.closeAllConnections();
+      await new Promise(resolve => server.close(resolve));
+    }
+  });
+
+  test('does not hang when the real /device/code HTTP response never completes', async () => {
+    const server = http.createServer(() => {
+      // Intentionally accept the request without sending a response.
+    });
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address();
+
+    try {
+      jest.resetModules();
+      const { runDeviceCodeFlow } = require('../lib/auth/oauth-device');
+      await expect(runDeviceCodeFlow({
+        authBaseUrl: `http://127.0.0.1:${port}/auth`,
+        clientId: 'client-1',
+        quiet: true,
+        timeoutMs: 50,
+      })).rejects.toMatchObject({ code: 'device_timeout' });
+    } finally {
+      server.closeAllConnections();
+      await new Promise(resolve => server.close(resolve));
+    }
   });
 
   test('applies slow_down to subsequent polling', async () => {
@@ -226,5 +245,33 @@ describe('OAuth device authorization flow', () => {
     await jest.advanceTimersByTimeAsync(30);
 
     await rejection;
+  });
+
+  test('deducts device-code request time from the polling budget', async () => {
+    jest.useFakeTimers();
+    const requestJson = jest.fn()
+      .mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve({
+        deviceCode: 'device-1',
+        userCode: 'ABCD-EFGH',
+        verificationUri: 'https://example.test/verify',
+        expiresIn: 600,
+        interval: 0.001,
+      }), 20)))
+      .mockResolvedValueOnce({ accessToken: 'access-token' });
+    const { runDeviceCodeFlow } = loadDeviceModule(requestJson);
+
+    const resultPromise = runDeviceCodeFlow({
+      authBaseUrl: 'https://example.test/auth',
+      clientId: 'client-1',
+      quiet: true,
+      timeoutMs: 30,
+    });
+    await jest.advanceTimersByTimeAsync(20);
+    await expect(resultPromise).resolves.toMatchObject({ accessToken: 'access-token' });
+
+    const codeBudget = requestJson.mock.calls[0][4].timeoutMs;
+    const pollBudget = requestJson.mock.calls[1][4].timeoutMs;
+    expect(codeBudget).toBe(30);
+    expect(pollBudget).toBeLessThanOrEqual(10);
   });
 });
